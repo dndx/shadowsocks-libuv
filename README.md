@@ -4,6 +4,8 @@ shadowsocks is a lightweight tunnel proxy which can help you get through firewal
 
 protol made by [clowwindy](https://raw.github.com/clowwindy/), libuv port by [dndx](https://github.com/dndx)
 
+This is only a **server**, it should works with any shadowsocks client. 
+
 Current version: 0.1
 
 ## Features
