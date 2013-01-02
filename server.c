@@ -23,12 +23,14 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
 #include <uv.h>
 #include "encrypt.h"
 #include "utils.h"
 #include "server.h"
 
-unsigned char encrypt_table[TABLE_SIZE], decrypt_table[TABLE_SIZE];
+uint8_t encrypt_table[TABLE_SIZE], decrypt_table[TABLE_SIZE];
 
 static void established_free_cb(uv_handle_t* handle)
 {
@@ -98,7 +100,7 @@ static void remote_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_bu
 		return;
 	}
 
-	shadow_encrypt((unsigned char *)buf.base, encrypt_table, nread);
+	shadow_encrypt((uint8_t *)buf.base, encrypt_table, nread);
 
 	uv_write_t *req = (uv_write_t *)malloc(sizeof(uv_write_t));
 	if (!req) {
@@ -169,7 +171,7 @@ static void client_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_bu
 		return;
 	}
 
-	shadow_decrypt((unsigned char *)buf.base, decrypt_table, nread);
+	shadow_decrypt((uint8_t *)buf.base, decrypt_table, nread);
 
 	uv_write_t *req = (uv_write_t *)malloc(sizeof(uv_write_t));
 	if (!req) {
@@ -238,7 +240,7 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 	buf.base = (char *)ctx->handshake_buffer;
 	buf.len = HANDSHAKE_BUFFER_SIZE;
 
-	shadow_encrypt((unsigned char *)buf.base, encrypt_table, ctx->buffer_len);
+	shadow_encrypt((uint8_t *)buf.base, encrypt_table, ctx->buffer_len);
 
 	client_established_read_cb((uv_stream_t *)(void *)&ctx->client, ctx->buffer_len, buf); // Deal with ramaining data, only once
 	ctx->handshake_buffer = NULL;
@@ -443,17 +445,49 @@ static void connect_cb(uv_stream_t* listener, int status)
 		SHOW_UV_ERROR_AND_EXIT(listener->loop);
 }
 
-int main(int argc, char const *argv[])
+int main(int argc, char *argv[])
 {
+	char *server_listen = SERVER_LISTEN;
+	int server_port = SERVER_PORT;
+	uint8_t *password = (uint8_t *)PASSWORD;
+	char *pid_path = PID_FILE;
+
+	char opt;
+	while((opt = getopt(argc, argv, "l:p:k:f:")) != -1) { // not portable to windows
+		switch(opt) {
+			case 'l':
+			    server_listen = optarg;
+			    break;
+			case 'p':
+			    server_port = atoi(optarg);
+			    break;
+			case 'k':
+			    password = (uint8_t *)optarg;
+			    break;
+			case 'f':
+			    pid_path = optarg;
+			    break;
+			default:
+				fprintf(stderr, USAGE, argv[0]);
+				abort();
+		}
+	}
+
+	FILE *pid_file = fopen(pid_path, "wb");
+	if (!pid_file)
+		FATAL("fopen failed, %s", strerror(errno));
+	fprintf(pid_file, "%d", getpid());
+	fclose(pid_file);
+
 	LOGI(WELCOME_MESSAGE);
-	make_tables((unsigned char *)PASSWORD, encrypt_table, decrypt_table);
+	make_tables(password, encrypt_table, decrypt_table);
 	LOGI("Encrypt and decrypt table generated");
 	
 	int n;
 	uv_loop_t *loop = uv_default_loop();
 	uv_tcp_t listener;
 
-	struct sockaddr_in addr = uv_ip4_addr(SERVER_LISTEN, SERVER_PORT);
+	struct sockaddr_in addr = uv_ip4_addr(server_listen, server_port);
 
 	n = uv_tcp_init(loop, &listener);
 	if (n)
@@ -466,7 +500,7 @@ int main(int argc, char const *argv[])
 	n = uv_listen((uv_stream_t*)(void *)&listener, 5, connect_cb);
 	if (n)
 		SHOW_UV_ERROR_AND_EXIT(loop);
-	LOGI("Listening on " SERVER_LISTEN ":" TOSTR(SERVER_PORT));
+	LOGI("Listening on %s:%d", server_listen, server_port);
 
 	return uv_run(loop);
 }

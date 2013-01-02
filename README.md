@@ -24,7 +24,6 @@ This is an initial release and may not considered very stable, please open an is
 	$ cd shadowsocks-libuv/
 	$ vim config.h
 	$ make
-	$ ./server
 
 Note that you need to rebuild it every time you modify config.h, just run `make` again and it will do rest of the work. 
 
@@ -32,6 +31,22 @@ Tested and confirmed to work on:
 
 * Max OS X 10.8.2 x64 using clang 4.1
 * CentOS 5.8 x86 using gcc 4.1.2
+
+## How to Use
+After you build shadowsocks successfully, you can rename the file `server` and move it to anywhere you want. 
+
+Also there are command line options that can be used to override settings in config.h:
+
+	$ ./server -?
+	./server: invalid option -- ?
+	Shadowsocks Version:0.1 libuv(0.9) Written by Dndx(idndx.com)
+	Usage: ./server [-l listen] [-p port] [-k keyfile] [-f pidfile]
+
+	Options:
+      -l : Override the listening IP
+	  -p : Override the listening port
+	  -k : Override the listening password
+	  -f : Override the pidfile path
 
 ## Known Issues
 ### Build Failed

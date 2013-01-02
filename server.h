@@ -28,6 +28,16 @@
 #define WELCOME_MESSAGE "Shadowsocks Version:" TOSTR(SHADOW_MAJOR_VERSION) "." TOSTR(SHADOW_MINOR_VERSION) \
                         " libuv(" TOSTR(UV_VERSION_MAJOR) "." TOSTR(UV_VERSION_MINOR) ")"\
                         " Written by Dndx(idndx.com)"
+#define USAGE "Shadowsocks Version:" TOSTR(SHADOW_MAJOR_VERSION) "." TOSTR(SHADOW_MINOR_VERSION) \
+                        " libuv(" TOSTR(UV_VERSION_MAJOR) "." TOSTR(UV_VERSION_MINOR) ")"\
+                        " Written by Dndx(idndx.com)\n"\
+                        "Usage: %s [-l listen] [-p port] [-k keyfile] [-f pidfile]\n\n"\
+                        "Options:\n"\
+                        "  -l : Override the listening IP\n"\
+                        "  -p : Override the listening port\n"\
+                        "  -k : Override the listening password\n"\
+                        "  -f : Override the pidfile path\n\n"
+                        
 #define ADDRTYPE_IPV4 1
 #define ADDRTYPE_DOMAIN 3
 
