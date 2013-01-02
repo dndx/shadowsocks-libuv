@@ -30,14 +30,14 @@
 
 unsigned char encrypt_table[TABLE_SIZE], decrypt_table[TABLE_SIZE];
 
-void established_free_cb(uv_handle_t* handle)
+static void established_free_cb(uv_handle_t* handle)
 {
 	server_ctx *ctx = (server_ctx *)handle->data;
 	free(ctx);
 }
 
 // Close remote and free ctx
-void client_established_shutdown_complete(uv_shutdown_t* req, int status)
+static void client_established_shutdown_complete(uv_shutdown_t* req, int status)
 {
 	server_ctx *ctx = (server_ctx *)req->data;
 	HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, established_free_cb);
@@ -45,7 +45,7 @@ void client_established_shutdown_complete(uv_shutdown_t* req, int status)
 }
 
 // Close client and free ctx
-void remote_established_shutdown_complete(uv_shutdown_t* req, int status)
+static void remote_established_shutdown_complete(uv_shutdown_t* req, int status)
 {
 	server_ctx *ctx = (server_ctx *)req->data;
 	HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->remote, established_free_cb);
@@ -53,7 +53,7 @@ void remote_established_shutdown_complete(uv_shutdown_t* req, int status)
 }
 
 // Shutdown client
-void remote_established_close_cb(uv_handle_t* handle)
+static void remote_established_close_cb(uv_handle_t* handle)
 {
 	server_ctx *ctx = (server_ctx *)handle->data;
 	uv_read_stop((uv_stream_t *)(void *)&ctx->client);
@@ -68,7 +68,7 @@ void remote_established_close_cb(uv_handle_t* handle)
 }
 
 // Close client then close remote
-void client_established_close_cb(uv_handle_t* handle)
+static void client_established_close_cb(uv_handle_t* handle)
 {
 	server_ctx *ctx = (server_ctx *)handle->data;
 	uv_read_stop((uv_stream_t *)(void *)&ctx->remote);
@@ -82,7 +82,7 @@ void client_established_close_cb(uv_handle_t* handle)
 	}
 }
 
-void remote_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf)
+static void remote_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf)
 {
 	int n;
 	server_ctx *ctx = (server_ctx *)stream->data;
@@ -120,7 +120,7 @@ void remote_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf
 	ctx->buffer_len++;
 }
 
-void after_write_cb(uv_write_t* req, int status)
+static void after_write_cb(uv_write_t* req, int status)
 {
 	server_ctx *ctx = (server_ctx *)req->handle->data;
 	if (status) {
@@ -153,7 +153,7 @@ void after_write_cb(uv_write_t* req, int status)
 	free(req);
 }
 
-void client_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf)
+static void client_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf)
 {
 	int n;
 	server_ctx *ctx = (server_ctx *)stream->data;
@@ -189,7 +189,7 @@ void client_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf
 	// LOGI("Writed to remote");
 }
 
-uv_buf_t established_alloc_cb(uv_handle_t* handle, size_t suggested_size)
+static uv_buf_t established_alloc_cb(uv_handle_t* handle, size_t suggested_size)
 {
 	#ifdef BUFFER_LIMIT
 	void *buf = malloc(BUFFER_LIMIT);
@@ -207,7 +207,7 @@ uv_buf_t established_alloc_cb(uv_handle_t* handle, size_t suggested_size)
 }
 
 // Failed during handshake
-void handshake_client_close_cb(uv_handle_t* handle)
+static void handshake_client_close_cb(uv_handle_t* handle)
 {
 	server_ctx *ctx = (server_ctx *)handle->data;
 	if (ctx->handshake_buffer) {
@@ -217,7 +217,7 @@ void handshake_client_close_cb(uv_handle_t* handle)
 	free(ctx);
 }
 
-void connect_to_remote_cb(uv_connect_t* req, int status)
+static void connect_to_remote_cb(uv_connect_t* req, int status)
 {
 	server_ctx *ctx = (server_ctx *)req->data;
 	free(req);
@@ -252,7 +252,7 @@ void connect_to_remote_cb(uv_connect_t* req, int status)
 	}
 }
 
-void client_handshake_domain_resolved(uv_getaddrinfo_t *resolver, int status, struct addrinfo *res)
+static void client_handshake_domain_resolved(uv_getaddrinfo_t *resolver, int status, struct addrinfo *res)
 {
 	server_ctx *ctx = (server_ctx *)resolver->data;
 	if (status) {
@@ -278,7 +278,7 @@ void client_handshake_domain_resolved(uv_getaddrinfo_t *resolver, int status, st
 	free(resolver);
 }
 
-void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf)
+static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf)
 {
 	int n;
 	server_ctx *ctx = (server_ctx *)stream->data;
@@ -389,7 +389,7 @@ void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf)
 	}
 }
 
-uv_buf_t client_handshake_alloc_cb(uv_handle_t* handle, size_t suggested_size)
+static uv_buf_t client_handshake_alloc_cb(uv_handle_t* handle, size_t suggested_size)
 {
 	server_ctx *ctx = (server_ctx *)handle->data;
 	void *buf = malloc(HANDSHAKE_BUFFER_SIZE - ctx->buffer_len);
@@ -400,7 +400,7 @@ uv_buf_t client_handshake_alloc_cb(uv_handle_t* handle, size_t suggested_size)
 	return uv_buf_init(buf, HANDSHAKE_BUFFER_SIZE - ctx->buffer_len);
 }
 
-void connect_cb(uv_stream_t* listener, int status)
+static void connect_cb(uv_stream_t* listener, int status)
 {
 	int n;
 
