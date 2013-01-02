@@ -37,7 +37,8 @@
                         "  -p : Override the listening port\n"\
                         "  -k : Override the listening password\n"\
                         "  -f : Override the pidfile path\n\n"
-                        
+#define PROCESS_TITLE "shadowsocks on port:%d"
+#define PROCESS_TITLE_LENGTH 26
 #define ADDRTYPE_IPV4 1
 #define ADDRTYPE_DOMAIN 3
 

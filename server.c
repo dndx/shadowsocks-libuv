@@ -479,6 +479,14 @@ int main(int argc, char *argv[])
 	fprintf(pid_file, "%d", getpid());
 	fclose(pid_file);
 
+	char *process_title = malloc(PROCESS_TITLE_LENGTH); // we do not like waste memory
+	if (!process_title)
+		FATAL("malloc() failed!");
+	snprintf(process_title, PROCESS_TITLE_LENGTH, PROCESS_TITLE, server_port);
+	uv_setup_args(argc, argv);
+	uv_set_process_title(process_title);
+	free(process_title);
+
 	LOGI(WELCOME_MESSAGE);
 	make_tables(password, encrypt_table, decrypt_table);
 	LOGI("Encrypt and decrypt table generated");
