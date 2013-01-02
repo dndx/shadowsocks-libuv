@@ -8,6 +8,8 @@ This is only a **server**, it should works with any shadowsocks client.
 
 Current version: 0.1
 
+This is an [Open Source](http://opensource.org/licenses/MIT) project and released under [The MIT License](http://opensource.org/licenses/MIT)
+
 ## Features
 * Super fast and low resource consume (thanks to [libuv](https://github.com/joyent/libuv)), it can run very smoothly on almost any VPS. 
 * Fully compatible to other port of shadowsocks. 
