@@ -20,7 +20,7 @@ This is an [Open Source](http://opensource.org/licenses/MIT) project and release
 This is an initial release and may not considered very stable, please open an issue if you encounter any bugs. Be sure to attach the error message so I can identify it. 
 
 ## How to Build
-	$ git clone --recursive git@github.com:dndx/shadowsocks-libuv.git
+	$ git clone --recursive https://github.com/dndx/shadowsocks-libuv.git
 	$ cd shadowsocks-libuv/
 	$ vim config.h
 	$ make
