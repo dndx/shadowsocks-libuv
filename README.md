@@ -44,7 +44,7 @@ Tested and confirmed to work on:
 6. Save the file and run `make` again
 
 ## Performance
-I did not fully benchmark it yet, but accourding my usage on [TinyVZ](http://tinyvz.com/) (128M RAM and CentOS 5.8 x86). When watching YouTube 1080p vedio it use at most 3% of RAM and almost no CPU time. Which can be considered effective. 
+I did not fully benchmark it yet, but accourding my use on [TinyVZ](http://tinyvz.com/) (OpenVZ 128M RAM and CentOS 5.8 x86). When streaming YouTube 1080p vedio at about 20Mbit/s bandwidth, it use at most 3% of RAM (RSS about 7500) and almost no CPU time. During webpage browse it use less than 0.7% RAM (RSS about 1164). Which can be considered effective. 
 
 ## TODO List
 * IPv6 Support !important
