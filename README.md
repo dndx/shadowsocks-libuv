@@ -33,6 +33,7 @@ Tested and confirmed to work on:
 I did not fully benchmark it yet, but accourding my usage on [TinyVZ](http://tinyvz.com/) (128M RAM and CentOS 5.8 x86). When watching YouTube 1080p vedio it use at most 3% of RAM and almost no CPU time. Which can be considered effective. 
 
 ## TODO List
+* IPv6 Support !important
 * Add multi port support
 * Client implement
 * …to be continued…
