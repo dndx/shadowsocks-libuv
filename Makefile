@@ -1,6 +1,6 @@
 UNAME := $(shell uname)
 
-RTFLAGS="-lrt"
+RTFLAGS=-lrt
 ifeq ($(UNAME), Darwin)
 RTFLAGS=-framework CoreServices
 endif
@@ -9,9 +9,9 @@ FILES=server.c utils.c encrypt.c md5.c
 APP=server
 
 all: $(FILES) libuv/libuv.a
-	$(CC) $(CFLAGS) $(RTFLAGS) -lm -lpthread -o \
+	$(CC) $(CFLAGS) $(RTFLAGS) -lm -o \
 	$(APP) $(FILES) \
-	libuv/libuv.a
+	libuv/libuv.a -lpthread
 
 libuv/libuv.a:
 	$(MAKE) -C libuv
