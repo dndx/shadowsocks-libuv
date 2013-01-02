@@ -24,6 +24,8 @@ This is an initial release and may not considered very stable, please open an is
 	$ make
 	$ ./server
 
+Note that you need to rebuild it every time you modify config.h, just run `make` again and it will do rest of the work. 
+
 Tested and confirmed to work on:
 
 * Max OS X 10.8.2 x64 using clang 4.1
@@ -34,6 +36,7 @@ I did not fully benchmark it yet, but accourding my usage on [TinyVZ](http://tin
 
 ## TODO List
 * IPv6 Support !important
-* Add multi port support
-* Client implement
+* RC4 Crypto Support
+* Add Multi Port Support
+* Client Implement
 * …to be continued…
