@@ -33,6 +33,16 @@ Tested and confirmed to work on:
 * Max OS X 10.8.2 x64 using clang 4.1
 * CentOS 5.8 x86 using gcc 4.1.2
 
+## Known Issues
+### Build Failed
+	src/unix/linux/syscalls.h:74: error: expected specifier-qualifier-list before ‘__u64’
+1. First, make sure you have the latest kernel-headers by running `yum install kernel-headers`
+2. Try make again, if it still complains, see next
+3. `cd` to shadowsocks-libuv and `$ vim libuv/libuv/config-unix.mk`
+4. At about line 22, you will see `CSTDFLAG=--std=c89 -pedantic -Wall -Wextra -Wno-unused-parameter`
+5. Change it to `CSTDFLAG=--std=gnu99 -pedantic -Wall -Wextra -Wno-unused-parameter`
+6. Save the file and run `make` again
+
 ## Performance
 I did not fully benchmark it yet, but accourding my usage on [TinyVZ](http://tinyvz.com/) (128M RAM and CentOS 5.8 x86). When watching YouTube 1080p vedio it use at most 3% of RAM and almost no CPU time. Which can be considered effective. 
 
