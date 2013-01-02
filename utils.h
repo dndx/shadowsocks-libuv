@@ -21,6 +21,10 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 #include <stddef.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define STR(x) #x
 #define TOSTR(x) STR(x)
@@ -37,6 +41,18 @@
 						  strftime(timestr, 20, TIME_FORMAT, localtime(&now));\
                           fprintf(stderr, "%s ERROR: " format " on File: %s Line: %s\n", timestr, ##__VA_ARGS__, __FILE__, TOSTR(__LINE__));}\
                           while(0)
+#define LOGCONN(stream, message) do {\
+                            struct sockaddr remote_addr;\
+                            memset(&remote_addr, 0, sizeof(remote_addr));\
+                            int namelen = sizeof(remote_addr);\
+                            if (uv_tcp_getpeername((stream), &remote_addr, &namelen))\
+                                break;\
+                            char *ip_str = sockaddr_to_str(&remote_addr);\
+                            if (!ip_str)\
+                              FATAL("unknown address type");\
+                            LOGI(message, ip_str);\
+                            free(ip_str);\
+                        } while (0)
 #define FATAL(format, ...) do {\
 						  time_t now = time(NULL);\
 						  char timestr[20];\
@@ -55,5 +71,7 @@
                                        if (!uv_is_closing((uv_handle_t *)handle))\
                                        	   uv_close((uv_handle_t *)handle, callback);\
                                        	} while (0)
+
+char *sockaddr_to_str(struct sockaddr *addr);
 
 #endif /* !UTILS_H_ */

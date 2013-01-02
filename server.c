@@ -92,7 +92,7 @@ static void remote_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_bu
 	if (nread < 0) { // EOF
 		if (buf.len) // If buf is set, we need to free it
 			free(buf.base);
-		LOGI("Remote EOF, Closing");
+		LOGCONN(&ctx->remote, "Remote %s EOF, closing");
 		HANDLE_CLOSE((uv_handle_t*)stream, remote_established_close_cb); // Then close the connection
 		return;
 	} else if (!nread) {
@@ -163,7 +163,7 @@ static void client_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_bu
 	if (nread < 0) { // EOF
 		if (buf.len) // If buf is set, we need to free it
 			free(buf.base);
-		LOGI("Client EOF, Closing");
+		LOGCONN(&ctx->client, "Client %s EOF, closing");
 		HANDLE_CLOSE((uv_handle_t*)stream, client_established_close_cb); // Then close the connection
 		return;
 	} else if (!nread) {
@@ -234,7 +234,7 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 
 	free(req);
 
-	LOGI("Connected to remote server");
+	LOGCONN(&ctx->remote, "Connected to %s");
 
 	uv_buf_t buf;
 	buf.base = (char *)ctx->handshake_buffer;
@@ -306,7 +306,7 @@ static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_
 	ctx->buffer_len += nread;
 
 	if (!ctx->handshake_buffer) {
-		FATAL("Should no call this anmore");
+		FATAL("Should not call this anymore");
 	}
 	free(buf.base);
 
@@ -443,6 +443,8 @@ static void connect_cb(uv_stream_t* listener, int status)
 	n = uv_read_start((uv_stream_t *)(void *)&ctx->client, client_handshake_alloc_cb, client_handshake_read_cb);
 	if (n)
 		SHOW_UV_ERROR_AND_EXIT(listener->loop);
+
+	LOGCONN(&ctx->client, "Accepted connection from %s");
 }
 
 int main(int argc, char *argv[])
