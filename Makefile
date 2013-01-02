@@ -4,7 +4,8 @@ RTFLAGS=-lrt
 ifeq ($(UNAME), Darwin)
 RTFLAGS=-framework CoreServices
 endif
-CFLAGS=-Wall -O3 -I libuv/include -DNDEBUG -std=gnu99
+OLEVEL=-O3 -DNDEBUG
+CFLAGS=-Wall $(OLEVEL) -I libuv/include -std=gnu99
 FILES=server.c utils.c encrypt.c md5.c
 APP=server
 
@@ -16,14 +17,21 @@ all: $(FILES) libuv/libuv.a
 libuv/libuv.a:
 	$(MAKE) -C libuv
 
-valgrind: CFLAGS=-Wall -O0 -I libuv/include -g -std=gnu99
+valgrind: OLEVEL=-O0 -g
 valgrind: all
 	valgrind --leak-check=full ./server
 
-debug: CFLAGS=-Wall -O0 -I libuv/include -g -std=gnu99
+debug: OLEVEL=-O0 -g
 debug: all
+
+test: OLEVEL=-O0 -g
+test: FILES=tests.c utils.c encrypt.c md5.c
+test: APP=test
+test: all
+	./test
 
 clean:
 	$(MAKE) -C libuv clean
 	rm -f server
 	rm -rf *.dSYM
+	rm -rf test
