@@ -354,6 +354,10 @@ static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_
 			ctx->buffer_len -= 2 + domain_len;
 			uv_read_stop(stream); // Pause the reading process, wait for resolve result
 			return;
+		} else { // Unsupported addrtype
+			LOGI("addrtype unknown, closing");
+			HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
+			return;
 		}
 	} // !ctx->remote_ip
 
