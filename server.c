@@ -220,14 +220,17 @@ static void handshake_client_close_cb(uv_handle_t* handle)
 static void connect_to_remote_cb(uv_connect_t* req, int status)
 {
 	server_ctx *ctx = (server_ctx *)req->data;
-	free(req);
 	if (status) {
 		if (uv_last_error(req->handle->loop).code != UV_ECANCELED) {
 			SHOW_UV_ERROR(ctx->client.loop);
 			HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->remote, remote_established_close_cb);
+			free(ctx->handshake_buffer);
+			free(req);
 		}
 		return;
 	}
+
+	free(req);
 
 	LOGI("Connected to remote server");
 
