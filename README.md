@@ -38,7 +38,7 @@ Tested and confirmed to work on:
 	src/unix/linux/syscalls.h:74: error: expected specifier-qualifier-list before ‘__u64’
 1. First, make sure you have the latest kernel-headers by running `yum install kernel-headers`
 2. Try make again, if it still complains, see next
-3. `cd` to shadowsocks-libuv and `$ vim libuv/libuv/config-unix.mk`
+3. `cd` to shadowsocks-libuv and `$ vim libuv/config-unix.mk`
 4. At about line 22, you will see `CSTDFLAG=--std=c89 -pedantic -Wall -Wextra -Wno-unused-parameter`
 5. Change it to `CSTDFLAG=--std=gnu99 -pedantic -Wall -Wextra -Wno-unused-parameter`
 6. Save the file and run `make` again
