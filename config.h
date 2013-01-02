@@ -4,7 +4,7 @@
 
 // This is the IP address server will be used to accept new connection
 #define SERVER_LISTEN "0.0.0.0"
-// This is the port  server will be used to accept new connection
+// This is the port server will be used to accept new connection
 #define SERVER_PORT 8888
 // This is the password used for encrypt/decrypt, should be the same as your client
 #define PASSWORD "foobar!"
@@ -15,8 +15,8 @@
 #define HANDSHAKE_BUFFER_SIZE 512
 // This is the buffer size (in byte) that will be used during receive data, if you are not sure, just leave it
 #define BUFFER_LIMIT 65536
-// This is the number of max allowed pending write to client request, if you are running out of memory, you may want to decrease this a little
-// The max possible memory usage of this program is BUFFER_LIMIT * MAX_PENDING_PER_CONN * Concurrent connection number
+// This is the number of max allowed pending write to client request, if you are running out of memory (which is very unlikely), you may want to decrease this a little
+// The max possible memory usage of this program is BUFFER_LIMIT * MAX_PENDING_PER_CONN * Concurrent connection number, but this is kind of situation almost impossible to happen
 // In most case, increase this value will better your performance
 #define MAX_PENDING_PER_CONN 100
 
