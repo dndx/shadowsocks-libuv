@@ -9,9 +9,9 @@ FILES=server.c utils.c encrypt.c md5.c
 APP=server
 
 all: $(FILES) libuv/libuv.a
-	$(CC) $(CFLAGS) $(RTFLAGS) -lm -o \
+	$(CC) $(CFLAGS) -o \
 	$(APP) $(FILES) \
-	libuv/libuv.a -lpthread
+	libuv/libuv.a -lpthread -lm $(RTFLAGS)
 
 libuv/libuv.a:
 	$(MAKE) -C libuv
