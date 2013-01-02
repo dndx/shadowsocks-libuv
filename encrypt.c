@@ -22,9 +22,6 @@
 #include "md5.h"
 #include "encrypt.h"
 
-static int ei;
-static uint64_t keynum;
-
 #ifdef HIGHFIRST
 	uint64_t swap_uint64( uint64_t val )
 	{
@@ -35,9 +32,9 @@ static uint64_t keynum;
 #endif /* BIG ENDIAN */
 
 /*
- * message must be unsigned char[16]
+ * message must be uint8_t[16]
  */
-void md5(const unsigned char *text, unsigned char *message)
+void md5(const uint8_t *text, uint8_t *message)
 {
 	struct MD5Context context;
 	MD5Init(&context);
@@ -45,13 +42,13 @@ void md5(const unsigned char *text, unsigned char *message)
 	MD5Final(message, &context);
 }
 
-static void merge(unsigned char *arr, int start, int end, int mid)
+static void merge(uint8_t *arr, int start, int end, int mid, int ei, uint64_t keynum)
 {
 	int asize = mid - start + 1;
-	unsigned char a[asize];
+	uint8_t a[asize];
 	memcpy(a, arr + start, asize);
-	unsigned char *b = arr;
-	unsigned char *result = arr;
+	uint8_t *b = arr;
+	uint8_t *result = arr;
 
 	int i = 0;
 	int j = mid + 1;
@@ -83,7 +80,7 @@ static void merge(unsigned char *arr, int start, int end, int mid)
 	}
 }
 
-static void merge_sort(unsigned char *arr, int start, int end)
+static void merge_sort(uint8_t *arr, int start, int end, int ei, uint64_t keynum)
 {
 	if (end - start <= 0) {
 		return;
@@ -91,33 +88,36 @@ static void merge_sort(unsigned char *arr, int start, int end)
 
 	int mid = (start + end) / 2;
 
-	merge_sort(arr, start, mid);
-    merge_sort(arr, mid + 1, end);
-    merge(arr, start, end, mid);
+	merge_sort(arr, start, mid, ei, keynum);
+    merge_sort(arr, mid + 1, end, ei, keynum);
+    merge(arr, start, end, mid, ei, keynum);
 }
 
-static void mergesort(unsigned char *arr, int length)
+static void mergesort(uint8_t *arr, int length, int ei, uint64_t keynum)
 {
-	merge_sort(arr, 0, length - 1);
+	merge_sort(arr, 0, length - 1, ei, keynum);
 }
 
 /*
- * encrypt_table and decrypt_table must be unsigned char[TABLE_SIZE]
+ * encrypt_table and decrypt_table must be uint8_t[TABLE_SIZE]
  */
-void make_tables(const unsigned char *key, unsigned char *encrypt_table, unsigned char *decrypt_table)
+void make_tables(const uint8_t *key, uint8_t *encrypt_table, uint8_t *decrypt_table)
 {
-	unsigned char digest[16];
+	uint8_t digest[16];
+	int ei;
+	uint64_t keynum;
+
 	md5(key, digest);
 	memcpy(&keynum, digest, 8);
 	#ifdef HIGHFIRST
 	 	keynum = swap_uint64(keynum);
 	#endif /* BIG ENDIAN */
-	unsigned char temp_table[TABLE_SIZE];
+	uint8_t temp_table[TABLE_SIZE];
 	for (ei=0; ei<TABLE_SIZE; ei++) {
 		temp_table[ei] = ei;
 	}
 	for (ei=1; ei<1024; ei++) {
-		mergesort(temp_table, TABLE_SIZE);
+		mergesort(temp_table, TABLE_SIZE, ei, keynum);
 	}
 	memcpy(encrypt_table, temp_table, TABLE_SIZE);
 	for (ei=0; ei<TABLE_SIZE; ei++) {
@@ -125,14 +125,14 @@ void make_tables(const unsigned char *key, unsigned char *encrypt_table, unsigne
 	}
 }
 
-void shadow_encrypt(unsigned char *data, unsigned char *encrypt_table, register unsigned int length)
+void shadow_encrypt(uint8_t *data, uint8_t *encrypt_table, register unsigned int length)
 {
 	while (length--) {
 		data[length] = encrypt_table[data[length]];
 	}
 }
 
-void shadow_decrypt(unsigned char *data, unsigned char *decrypt_table, register unsigned int length)
+void shadow_decrypt(uint8_t *data, uint8_t *decrypt_table, register unsigned int length)
 {
 	while (length--) {
 		data[length] = decrypt_table[data[length]];
