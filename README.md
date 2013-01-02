@@ -1,5 +1,7 @@
 shadowsocks-libuv
 =================
+[![Build Status](https://travis-ci.org/dndx/shadowsocks-libuv.png?branch=master)](https://travis-ci.org/dndx/shadowsocks-libuv)
+
 shadowsocks is a lightweight tunnel proxy which can help you get through firewalls. 
 
 protol made by [clowwindy](https://raw.github.com/clowwindy/), libuv port by [dndx](https://github.com/dndx)
