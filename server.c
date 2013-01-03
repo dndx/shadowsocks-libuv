@@ -280,7 +280,7 @@ int do_handshake(uv_stream_t *stream)
 			if (!domain_len) { // Domain length is zero
 				LOGE("Domain length is zero");
 				HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
-				return 1;
+				return 0;
 			}
 			if (ctx->buffer_len < domain_len + 2)
 				return 1;
@@ -304,7 +304,7 @@ int do_handshake(uv_stream_t *stream)
 				SHOW_UV_ERROR(stream->loop);
 				HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
 				free(resolver);
-				return 1;
+				return 0;
 			}
 			SHIFT_BYTE_ARRAY_TO_LEFT(ctx->handshake_buffer, 2+domain_len, HANDSHAKE_BUFFER_SIZE);
 			ctx->buffer_len -= 2 + domain_len;
@@ -313,7 +313,7 @@ int do_handshake(uv_stream_t *stream)
 		} else { // Unsupported addrtype
 			LOGI("addrtype unknown, closing");
 			HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
-			return 1;
+			return 0;
 		}
 	} // !ctx->remote_ip
 
@@ -324,7 +324,7 @@ int do_handshake(uv_stream_t *stream)
 		if (!ctx->remote_port) {
 			LOGE("Remote port is zero");
 			HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
-			return 1;
+			return 0;
 		}
 		SHIFT_BYTE_ARRAY_TO_LEFT(ctx->handshake_buffer, 2, HANDSHAKE_BUFFER_SIZE);
 		ctx->buffer_len -= 2;
@@ -348,9 +348,11 @@ int do_handshake(uv_stream_t *stream)
 			SHOW_UV_ERROR(stream->loop);
 			HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
 			free(req);
-			return 1;
+			return 0;
 		}
 	}
+
+	uv_read_stop(stream);
 	return 0;
 }
 
@@ -407,8 +409,7 @@ static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_
 	}
 	free(buf.base);
 	
-	if (!do_handshake(stream))
-		uv_read_stop(stream); // We are done handshake
+	do_handshake(stream);
 }
 
 static uv_buf_t client_handshake_alloc_cb(uv_handle_t* handle, size_t suggested_size)
