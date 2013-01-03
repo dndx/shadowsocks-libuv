@@ -34,13 +34,13 @@
 						  time_t now = time(NULL);\
 						  char timestr[20];\
 						  strftime(timestr, 20, TIME_FORMAT, localtime(&now));\
-                          fprintf(stderr, "%s INFO: " format "\n", timestr, ##__VA_ARGS__);}\
+                          fprintf(stderr, "\e[01;32m %s INFO: \e[0m" format "\n", timestr, ##__VA_ARGS__);}\
                           while(0)
 #define LOGE(format, ...) do {\
 						  time_t now = time(NULL);\
 						  char timestr[20];\
 						  strftime(timestr, 20, TIME_FORMAT, localtime(&now));\
-                          fprintf(stderr, "%s ERROR: " format " on File: %s Line: %s\n", timestr, ##__VA_ARGS__, __FILE__, TOSTR(__LINE__));}\
+                          fprintf(stderr, "\e[01;35m %s ERROR: \e[0m" format " on File: %s Line: %s\n", timestr, ##__VA_ARGS__, __FILE__, TOSTR(__LINE__));}\
                           while(0)
 #define LOGCONN(stream, message) do {\
                             struct sockaddr remote_addr;\
@@ -58,7 +58,7 @@
 						  time_t now = time(NULL);\
 						  char timestr[20];\
 						  strftime(timestr, 20, TIME_FORMAT, localtime(&now));\
-                          fprintf(stderr, "%s FATAL: " format " on File: %s Line: %s\n", timestr, ##__VA_ARGS__, __FILE__, TOSTR(__LINE__));exit(1);}\
+                          fprintf(stderr, "\e[01;31m %s FATAL: \e[0m" format " on File: %s Line: %s\n", timestr, ##__VA_ARGS__, __FILE__, TOSTR(__LINE__));exit(1);}\
                           while(0)
 #define SHOW_UV_ERROR(loop) do {LOGE("libuv error: %s", uv_strerror(uv_last_error(loop)));} while (0)
 #define SHOW_UV_ERROR_AND_EXIT(loop) do {SHOW_UV_ERROR(loop);LOGE("Fatal error, terminating... ");exit(1);} while (0)
