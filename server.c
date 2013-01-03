@@ -245,6 +245,10 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 	client_established_read_cb((uv_stream_t *)(void *)&ctx->client, ctx->buffer_len, buf); // Deal with ramaining data, only once
 	ctx->handshake_buffer = NULL;
 	ctx->buffer_len = 0;
+
+	if (uv_is_closing((uv_handle_t *)(void *)&ctx->remote) || uv_is_closing((uv_handle_t *)(void *)&ctx->client))
+		LOGE("Connection failed, remote or client already closed");
+	
 	int n = uv_read_start((uv_stream_t *)(void *)&ctx->client, established_alloc_cb, client_established_read_cb);
 	if (n) {
 		SHOW_UV_ERROR(ctx->client.loop);
