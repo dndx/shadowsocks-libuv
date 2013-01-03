@@ -259,7 +259,7 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 	}
 }
 
-int do_handshake(uv_stream_t *stream)
+static int do_handshake(uv_stream_t *stream)
 {
 	server_ctx *ctx = (server_ctx *)stream->data;
 	int n;
