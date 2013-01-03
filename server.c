@@ -259,64 +259,18 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 	}
 }
 
-static void client_handshake_domain_resolved(uv_getaddrinfo_t *resolver, int status, struct addrinfo *res)
+int do_handshake(uv_stream_t *stream)
 {
-	server_ctx *ctx = (server_ctx *)resolver->data;
-	if (status) {
-		if (uv_last_error(ctx->client.loop).code == UV_ENOENT) {
-			LOGI("Resolve error, NXDOMAIN");
-		} else {
-			SHOW_UV_ERROR(ctx->client.loop);
-		}
-		HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, handshake_client_close_cb);
-		uv_freeaddrinfo(res);
-		free(resolver);
-		return;
-	}
-
-	ctx->remote_ip = ((struct sockaddr_in*)(res->ai_addr))->sin_addr.s_addr;
-	int n = uv_read_start((uv_stream_t *)(void *)&ctx->client, client_handshake_alloc_cb, client_handshake_read_cb);
-	if (n) {
-		HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, handshake_client_close_cb);
-		SHOW_UV_ERROR(ctx->client.loop);
-	}
-
-	uv_freeaddrinfo(res);
-	free(resolver);
-}
-
-static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf)
-{
-	int n;
 	server_ctx *ctx = (server_ctx *)stream->data;
-
-	if (nread < 0) {
-		if (buf.len) // If buf is set, we need to free it
-			free(buf.base);
-		HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb); // Then close the connection
-		return;
-	} else if (!nread) {
-		free(buf.base);
-		return;
-	}
-
-	memcpy(ctx->handshake_buffer + ctx->buffer_len, buf.base, buf.len);
-	shadow_decrypt(ctx->handshake_buffer + ctx->buffer_len, decrypt_table, buf.len);
-
-	ctx->buffer_len += nread;
-
-	if (!ctx->handshake_buffer) {
-		FATAL("Should not call this anymore");
-	}
-	free(buf.base);
+	int n;
 
 	if (!ctx->remote_ip) {
 		if (ctx->buffer_len < 2) // Not interpretable
-			return;
+			return 1;
 		uint8_t addrtype = ctx->handshake_buffer[0];
 		if (addrtype == ADDRTYPE_IPV4) {
 			if (ctx->buffer_len < 5)
-				return;
+				return 1;
 			ctx->remote_ip = *((uint32_t *)(ctx->handshake_buffer + 1));
 			SHIFT_BYTE_ARRAY_TO_LEFT(ctx->handshake_buffer, 5, HANDSHAKE_BUFFER_SIZE);
 			ctx->buffer_len -= 5;
@@ -326,10 +280,10 @@ static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_
 			if (!domain_len) { // Domain length is zero
 				LOGE("Domain length is zero");
 				HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
-				return;
+				return 1;
 			}
 			if (ctx->buffer_len < domain_len + 2)
-				return;
+				return 1;
 			char domain[domain_len+1];
 			domain[domain_len] = 0;
 			memcpy(domain, ctx->handshake_buffer+2, domain_len);
@@ -350,27 +304,27 @@ static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_
 				SHOW_UV_ERROR(stream->loop);
 				HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
 				free(resolver);
-				return;
+				return 1;
 			}
 			SHIFT_BYTE_ARRAY_TO_LEFT(ctx->handshake_buffer, 2+domain_len, HANDSHAKE_BUFFER_SIZE);
 			ctx->buffer_len -= 2 + domain_len;
 			uv_read_stop(stream); // Pause the reading process, wait for resolve result
-			return;
+			return 1;
 		} else { // Unsupported addrtype
 			LOGI("addrtype unknown, closing");
 			HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
-			return;
+			return 1;
 		}
 	} // !ctx->remote_ip
 
 	if (!ctx->remote_port) {
 		if (ctx->buffer_len < 2) // Not interpretable
-			return;
+			return 1;
 		ctx->remote_port = *((uint16_t *)ctx->handshake_buffer);
 		if (!ctx->remote_port) {
 			LOGE("Remote port is zero");
 			HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
-			return;
+			return 1;
 		}
 		SHIFT_BYTE_ARRAY_TO_LEFT(ctx->handshake_buffer, 2, HANDSHAKE_BUFFER_SIZE);
 		ctx->buffer_len -= 2;
@@ -394,10 +348,67 @@ static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_
 			SHOW_UV_ERROR(stream->loop);
 			HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
 			free(req);
-			return;
+			return 1;
 		}
-		uv_read_stop(stream); // We are done handshake
 	}
+	return 0;
+}
+
+static void client_handshake_domain_resolved(uv_getaddrinfo_t *resolver, int status, struct addrinfo *res)
+{
+	server_ctx *ctx = (server_ctx *)resolver->data;
+	if (status) {
+		if (uv_last_error(ctx->client.loop).code == UV_ENOENT) {
+			LOGI("Resolve error, NXDOMAIN");
+		} else {
+			SHOW_UV_ERROR(ctx->client.loop);
+		}
+		HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, handshake_client_close_cb);
+		uv_freeaddrinfo(res);
+		free(resolver);
+		return;
+	}
+
+	ctx->remote_ip = ((struct sockaddr_in*)(res->ai_addr))->sin_addr.s_addr;
+
+	if (do_handshake((uv_stream_t *)&ctx->client)) {
+		int n = uv_read_start((uv_stream_t *)(void *)&ctx->client, client_handshake_alloc_cb, client_handshake_read_cb);
+		if (n) {
+			HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, handshake_client_close_cb);
+			SHOW_UV_ERROR(ctx->client.loop);
+		}
+	}
+
+	uv_freeaddrinfo(res);
+	free(resolver);
+}
+
+static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_t buf)
+{
+	server_ctx *ctx = (server_ctx *)stream->data;
+
+	if (nread < 0) {
+		if (buf.len) // If buf is set, we need to free it
+			free(buf.base);
+		HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb); // Then close the connection
+		return;
+	} else if (!nread) {
+		free(buf.base);
+		return;
+	}
+
+	memcpy(ctx->handshake_buffer + ctx->buffer_len, buf.base, buf.len);
+	shadow_decrypt(ctx->handshake_buffer + ctx->buffer_len, decrypt_table, buf.len);
+
+	ctx->buffer_len += nread;
+
+	if (!ctx->handshake_buffer) {
+		FATAL("Should not call this anymore");
+	}
+	free(buf.base);
+	
+	if (!do_handshake(stream))
+		uv_read_stop(stream); // We are done handshake
 }
 
 static uv_buf_t client_handshake_alloc_cb(uv_handle_t* handle, size_t suggested_size)

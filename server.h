@@ -57,5 +57,6 @@ static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_
 static uv_buf_t client_handshake_alloc_cb(uv_handle_t* handle, size_t suggested_size);
 static void after_write_cb(uv_write_t* req, int status);
 static uv_buf_t established_alloc_cb(uv_handle_t* handle, size_t suggested_size);
+static void client_handshake_domain_resolved(uv_getaddrinfo_t *resolver, int status, struct addrinfo *res);
 
 #endif /* !SERVER_H_ */

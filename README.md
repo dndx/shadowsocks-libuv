@@ -31,6 +31,7 @@ Tested and confirmed to work on:
 
 * Max OS X 10.8.2 x64 using clang 4.1
 * CentOS 5.8 x86 using gcc 4.1.2
+* CentOS 6.3 x64 using gcc 4.4.6
 
 ## How to Use
 After you build shadowsocks successfully, you can rename the file `server` and move it to anywhere you want. 
