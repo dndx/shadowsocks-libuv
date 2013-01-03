@@ -29,4 +29,8 @@
 // In most case, increase this value will better your performance
 #define MAX_PENDING_PER_CONN 100
 
+// This is the interval (in seconds) the operation system will be used to check whether the connection is still alive
+// If you think you do not need it, you can comment next line to turn it off
+#define KEEPALIVE_TIMEOUT 120
+
 #endif /* !CONFIG_H_ */

@@ -440,6 +440,12 @@ static void connect_cb(uv_stream_t* listener, int status)
 	if (n)
 		SHOW_UV_ERROR_AND_EXIT(listener->loop);
 
+	#ifdef KEEPALIVE_TIMEOUT
+	n = uv_tcp_keepalive(&ctx->client, 1, KEEPALIVE_TIMEOUT);
+	if (n)
+		SHOW_UV_ERROR_AND_EXIT(listener->loop);
+	#endif /* KEEPALIVE_TIMEOUT */
+
 	n = uv_read_start((uv_stream_t *)(void *)&ctx->client, client_handshake_alloc_cb, client_handshake_read_cb);
 	if (n)
 		SHOW_UV_ERROR_AND_EXIT(listener->loop);
