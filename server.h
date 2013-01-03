@@ -46,7 +46,6 @@ typedef struct
 {
 	uv_tcp_t client;
 	uv_tcp_t remote;
-	struct sockaddr client_info;
 	uint32_t remote_ip;   // Network order
 	uint16_t remote_port; // Network order
 	unsigned char *handshake_buffer;

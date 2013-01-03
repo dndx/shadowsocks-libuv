@@ -68,7 +68,7 @@
                               	putchar(buf[i]);\
                               } while (0)
 #define HANDLE_CLOSE(handle, callback) do {\
-                                       if (!uv_is_closing((uv_handle_t *)handle))\
+                                       if (!(uv_is_closing((uv_handle_t *)&ctx->remote) || uv_is_closing((uv_handle_t *)&ctx->client)))\
                                        	   uv_close((uv_handle_t *)handle, callback);\
                                        	} while (0)
 

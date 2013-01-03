@@ -42,7 +42,7 @@ static void established_free_cb(uv_handle_t* handle)
 static void client_established_shutdown_complete(uv_shutdown_t* req, int status)
 {
 	server_ctx *ctx = (server_ctx *)req->data;
-	HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, established_free_cb);
+	uv_close((uv_handle_t*)(void *)&ctx->client, established_free_cb);
 	free(req);
 }
 
@@ -50,7 +50,7 @@ static void client_established_shutdown_complete(uv_shutdown_t* req, int status)
 static void remote_established_shutdown_complete(uv_shutdown_t* req, int status)
 {
 	server_ctx *ctx = (server_ctx *)req->data;
-	HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->remote, established_free_cb);
+	uv_close((uv_handle_t*)(void *)&ctx->remote, established_free_cb);
 	free(req);
 }
 
@@ -61,10 +61,11 @@ static void remote_established_close_cb(uv_handle_t* handle)
 	uv_read_stop((uv_stream_t *)(void *)&ctx->client);
 	uv_shutdown_t *req = malloc(sizeof(uv_shutdown_t));
 	req->data = ctx;
+
 	int n = uv_shutdown(req, (uv_stream_t *)(void *)&ctx->client, client_established_shutdown_complete);
 	if (n) {
 		LOGE("Shutdown client side write stream failed!");
-		HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, established_free_cb);
+		uv_close((uv_handle_t*)(void *)&ctx->client, established_free_cb);
 		free(req);
 	}
 }
@@ -76,10 +77,11 @@ static void client_established_close_cb(uv_handle_t* handle)
 	uv_read_stop((uv_stream_t *)(void *)&ctx->remote);
 	uv_shutdown_t *req = malloc(sizeof(uv_shutdown_t));
 	req->data = ctx;
+
 	int n = uv_shutdown(req, (uv_stream_t *)(void *)&ctx->remote, remote_established_shutdown_complete);
 	if (n) {
 		LOGE("Shutdown remote side write stream failed!");
-		HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->remote, established_free_cb);
+		uv_close((uv_handle_t*)(void *)&ctx->remote, established_free_cb);
 		free(req);
 	}
 }
