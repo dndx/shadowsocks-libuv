@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <uv.h>
 
 #define STR(x) #x
 #define TOSTR(x) STR(x)
@@ -73,5 +74,6 @@
                                        	} while (0)
 
 char *sockaddr_to_str(struct sockaddr *addr);
+void setup_signal_handler(uv_loop_t *loop);
 
 #endif /* !UTILS_H_ */

@@ -24,6 +24,9 @@ valgrind: all
 debug: OLEVEL=-O0 -g
 debug: all
 
+gprof: OLEVEL=-O0 -g -pg
+gprof: all
+
 test: OLEVEL=-O0 -g
 test: FILES=tests.c utils.c encrypt.c md5.c
 test: APP=test

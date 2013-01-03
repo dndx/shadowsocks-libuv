@@ -538,5 +538,9 @@ int main(int argc, char *argv[])
 		SHOW_UV_ERROR_AND_EXIT(loop);
 	LOGI("Listening on %s:%d", server_listen, server_port);
 
+	#ifndef NDEBUG
+	setup_signal_handler(loop);
+	#endif /* !NDEBUG */
+
 	return uv_run(loop);
 }
