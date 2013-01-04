@@ -525,8 +525,10 @@ int main(int argc, char *argv[])
 			    pid_path = optarg;
 			    break;
 			case 'm':
-			    if (!strcmp("RC4", optarg))
+			    if (!strcmp("rc4", optarg))
 			    	crypt_method = METHOD_RC4;
+			    else if (!strcmp("shadow", optarg))
+			    	crypt_method = METHOD_SHADOWCRYPT;
 			    break;
 			default:
 				fprintf(stderr, USAGE, newargv[0]);

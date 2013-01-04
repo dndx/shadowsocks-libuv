@@ -31,12 +31,13 @@
 #define USAGE "Shadowsocks Version:" TOSTR(SHADOW_MAJOR_VERSION) "." TOSTR(SHADOW_MINOR_VERSION) \
                         " libuv(" TOSTR(UV_VERSION_MAJOR) "." TOSTR(UV_VERSION_MINOR) ")"\
                         " Written by Dndx(idndx.com)\n"\
-                        "Usage: %s [-l listen] [-p port] [-k keyfile] [-f pidfile]\n\n"\
+                        "Usage: %s [-l listen] [-p port] [-k keyfile] [-f pidfile] [-m rc4|shadow]\n\n"\
                         "Options:\n"\
                         "  -l : Override the listening IP\n"\
                         "  -p : Override the listening port\n"\
                         "  -k : Override the listening password\n"\
-                        "  -f : Override the pidfile path\n\n"
+                        "  -f : Override the pidfile path\n"\
+                        "  -m : Override the encryption method\n\n"
 #define PROCESS_TITLE "shadowsocks on port:%d"
 #define PROCESS_TITLE_LENGTH 26
 #define ADDRTYPE_IPV4 1
