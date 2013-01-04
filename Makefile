@@ -12,7 +12,7 @@ APP=server
 all: $(FILES) libuv/libuv.a
 	$(CC) $(CFLAGS) -o \
 	$(APP) $(FILES) \
-	libuv/libuv.a -lpthread -lssl -lm $(RTFLAGS)
+	libuv/libuv.a -lpthread -lcrypto -lm $(RTFLAGS)
 
 libuv/libuv.a:
 	$(MAKE) -C libuv
@@ -28,7 +28,7 @@ gprof: OLEVEL=-O0 -g -pg
 gprof: all
 
 test: OLEVEL=-O0 -g
-test: FILES=tests.c utils.c encrypt.c md5.c
+test: FILES=tests.c encrypt.c md5.c rc4.c
 test: APP=test
 test: all
 	./test
