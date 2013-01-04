@@ -12,7 +12,7 @@ APP=server
 all: $(FILES) libuv/libuv.a
 	$(CC) $(CFLAGS) -o \
 	$(APP) $(FILES) \
-	libuv/libuv.a -lpthread -lssl -lm $(RTFLAGS)
+	libuv/libuv.a -lpthread -lcrypto -lm $(RTFLAGS)
 
 libuv/libuv.a:
 	$(MAKE) -C libuv
