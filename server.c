@@ -381,7 +381,7 @@ static void client_handshake_domain_resolved(uv_getaddrinfo_t *resolver, int sta
 
 	ctx->remote_ip = ((struct sockaddr_in*)(res->ai_addr))->sin_addr.s_addr;
 
-	if (do_handshake((uv_stream_t *)&ctx->client)) {
+	if (do_handshake((uv_stream_t *)(void *)&ctx->client)) {
 		int n = uv_read_start((uv_stream_t *)(void *)&ctx->client, client_handshake_alloc_cb, client_handshake_read_cb);
 		if (n) {
 			HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, handshake_client_close_cb);

@@ -89,8 +89,8 @@ static void merge_sort(uint8_t *arr, int start, int end, int ei, uint64_t keynum
 	int mid = (start + end) / 2;
 
 	merge_sort(arr, start, mid, ei, keynum);
-    merge_sort(arr, mid + 1, end, ei, keynum);
-    merge(arr, start, end, mid, ei, keynum);
+	merge_sort(arr, mid + 1, end, ei, keynum);
+	merge(arr, start, end, mid, ei, keynum);
 }
 
 static void mergesort(uint8_t *arr, int length, int ei, uint64_t keynum)
