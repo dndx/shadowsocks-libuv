@@ -32,6 +32,7 @@ test: FILES=tests.c utils.c encrypt.c md5.c
 test: APP=test
 test: all
 	./test
+	cd pytest; python test.py
 
 clean:
 	$(MAKE) -C libuv clean
