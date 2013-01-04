@@ -6,6 +6,8 @@
 
 void encrypt_test()
 {
+    struct encryptor enc;
+
 	uint8_t target1[2][256] = {
     {60, 53, 84, 138, 217, 94, 88, 23, 39, 242, 219, 35, 12, 157, 165, 181, 255, 143, 83, 247, 162, 16, 31, 209, 190,
      171, 115, 65, 38, 41, 21, 245, 236, 46, 121, 62, 166, 233, 44, 154, 153, 145, 230, 49, 128, 216, 173, 29, 241, 119,
@@ -54,21 +56,25 @@ void encrypt_test()
      230, 133, 215, 41, 184, 22, 104, 254, 234, 253, 187, 226, 247, 188, 156, 151, 40, 108, 51, 83, 178, 52, 3, 31, 255,
      195, 53, 235, 126, 167, 120}};
 
-     uint8_t encrypt_table[TABLE_SIZE], decrypt_table[TABLE_SIZE];
-
-     make_tables((uint8_t *)"foobar!", encrypt_table, decrypt_table);
+     make_encryptor(NULL, &enc, METHOD_SHADOWCRYPT, (uint8_t *)"foobar!");
 
      for (int i=0; i<256; i++) {
-     	assert(target1[0][i] == encrypt_table[i]);
-     	assert(target1[1][i] == decrypt_table[i]);
+     	assert(target1[0][i] == enc.encrypt_table[i]);
+     	assert(target1[1][i] == enc.decrypt_table[i]);
      }
 
-     make_tables((uint8_t *)"barfoo!", encrypt_table, decrypt_table);
+     free(enc.encrypt_table);
+     free(enc.decrypt_table);
+
+     make_encryptor(NULL, &enc, METHOD_SHADOWCRYPT, (uint8_t *)"barfoo!");
 
      for (int i=0; i<256; i++) {
-     	assert(target2[0][i] == encrypt_table[i]);
-     	assert(target2[1][i] == decrypt_table[i]);
+        assert(target2[0][i] == enc.encrypt_table[i]);
+        assert(target2[1][i] == enc.decrypt_table[i]);
      }
+
+     free(enc.encrypt_table);
+     free(enc.decrypt_table);
 
      puts("Encryption/Decryption test passed!");
 
