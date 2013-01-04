@@ -255,7 +255,7 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 	} else {
 		uv_write_t *wreq = (uv_write_t *)malloc(sizeof(uv_write_t));
 		if (!wreq) {
-			HANDLE_CLOSE((uv_handle_t*)&ctx->client, client_established_close_cb);
+			HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, client_established_close_cb);
 			FATAL("malloc() failed!");
 		}
 		wreq->data = buf.base;
@@ -264,7 +264,7 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 		if (n) {
 			LOGE("Write to remote failed!");
 			free(wreq);
-			HANDLE_CLOSE((uv_handle_t*)&ctx->client, client_established_close_cb);
+			HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, client_established_close_cb);
 			return;
 		}
 	}
