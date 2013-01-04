@@ -48,6 +48,7 @@ typedef struct
 	uv_tcp_t remote;
 	uint32_t remote_ip;   // Network order
 	uint16_t remote_port; // Network order
+        struct encryptor encoder; // En/decoder
 	unsigned char *handshake_buffer;
 	size_t buffer_len; // Also use as pending cound after handshake
 } server_ctx;

@@ -6,13 +6,13 @@ RTFLAGS=-framework CoreServices
 endif
 OLEVEL=-O3 -DNDEBUG
 CFLAGS=-Wall $(OLEVEL) -I libuv/include -std=gnu99
-FILES=server.c utils.c encrypt.c md5.c
+FILES=server.c utils.c encrypt.c md5.c rc4.c
 APP=server
 
 all: $(FILES) libuv/libuv.a
 	$(CC) $(CFLAGS) -o \
 	$(APP) $(FILES) \
-	libuv/libuv.a -lpthread -lm $(RTFLAGS)
+	libuv/libuv.a -lpthread -lssl -lm $(RTFLAGS)
 
 libuv/libuv.a:
 	$(MAKE) -C libuv

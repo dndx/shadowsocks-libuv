@@ -30,11 +30,13 @@
 #include "utils.h"
 #include "server.h"
 
-uint8_t encrypt_table[TABLE_SIZE], decrypt_table[TABLE_SIZE];
+struct encryptor crypto;
 
 static void established_free_cb(uv_handle_t* handle)
 {
 	server_ctx *ctx = (server_ctx *)handle->data;
+	if (!ctx->encoder.encrypt_table)
+		destroy_encryptor(&ctx->encoder);
 	free(ctx);
 }
 
@@ -102,7 +104,7 @@ static void remote_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_bu
 		return;
 	}
 
-	shadow_encrypt((uint8_t *)buf.base, encrypt_table, nread);
+	shadow_encrypt((uint8_t *)buf.base, &ctx->encoder, nread);
 
 	uv_write_t *req = (uv_write_t *)malloc(sizeof(uv_write_t));
 	if (!req) {
@@ -173,7 +175,7 @@ static void client_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_bu
 		return;
 	}
 
-	shadow_decrypt((uint8_t *)buf.base, decrypt_table, nread);
+	shadow_decrypt((uint8_t *)buf.base, &ctx->encoder, nread);
 
 	uv_write_t *req = (uv_write_t *)malloc(sizeof(uv_write_t));
 	if (!req) {
@@ -218,6 +220,8 @@ static void handshake_client_close_cb(uv_handle_t* handle)
 		free(ctx->handshake_buffer);
 		ctx->handshake_buffer = NULL;
 	}
+	if (!ctx->encoder.encrypt_table)
+		destroy_encryptor(&ctx->encoder);
 	free(ctx);
 }
 
@@ -242,9 +246,29 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 	buf.base = (char *)ctx->handshake_buffer;
 	buf.len = HANDSHAKE_BUFFER_SIZE;
 
-	shadow_encrypt((uint8_t *)buf.base, encrypt_table, ctx->buffer_len);
+	// shadow_encrypt((uint8_t *)buf.base, &ctx->encoder, ctx->buffer_len);
 
-	client_established_read_cb((uv_stream_t *)(void *)&ctx->client, ctx->buffer_len, buf); // Deal with ramaining data, only once
+	// client_established_read_cb((uv_stream_t *)(void *)&ctx->client, ctx->buffer_len, buf); // Deal with ramaining data, only once
+
+	if (!ctx->buffer_len) {
+		free(ctx->handshake_buffer);
+	} else {
+		uv_write_t *wreq = (uv_write_t *)malloc(sizeof(uv_write_t));
+		if (!wreq) {
+			HANDLE_CLOSE((uv_handle_t*)&ctx->client, client_established_close_cb);
+			FATAL("malloc() failed!");
+		}
+		wreq->data = buf.base;
+		buf.len = ctx->buffer_len;
+		int n = uv_write(wreq, (uv_stream_t *)(void *)&ctx->remote, &buf, 1, after_write_cb);
+		if (n) {
+			LOGE("Write to remote failed!");
+			free(wreq);
+			HANDLE_CLOSE((uv_handle_t*)&ctx->client, client_established_close_cb);
+			return;
+		}
+	}
+
 	ctx->handshake_buffer = NULL;
 	ctx->buffer_len = 0;
 
@@ -407,8 +431,8 @@ static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_
 		return;
 	}
 
-	memcpy(ctx->handshake_buffer + ctx->buffer_len, buf.base, buf.len);
-	shadow_decrypt(ctx->handshake_buffer + ctx->buffer_len, decrypt_table, buf.len);
+	memcpy(ctx->handshake_buffer + ctx->buffer_len, buf.base, nread);
+	shadow_decrypt(ctx->handshake_buffer + ctx->buffer_len, &ctx->encoder, nread);
 
 	ctx->buffer_len += nread;
 
@@ -441,12 +465,15 @@ static void connect_cb(uv_stream_t* listener, int status)
 	}
 
 	server_ctx *ctx = calloc(1, sizeof(server_ctx));
+	ctx->handshake_buffer = calloc(1, HANDSHAKE_BUFFER_SIZE);
+
+	if (!ctx || !ctx->handshake_buffer)
+		FATAL("malloc() failed!");
+
 	ctx->client.data = ctx;
 	ctx->remote.data = ctx;
-
-	ctx->handshake_buffer = calloc(1, HANDSHAKE_BUFFER_SIZE);
-	if (!ctx || !ctx->handshake_buffer)
-		SHOW_UV_ERROR_AND_EXIT(listener->loop);
+	
+	make_encryptor(&crypto, &ctx->encoder, 0, NULL);
 
 	n = uv_tcp_init(listener->loop, &ctx->client);
 	if (n)
@@ -475,13 +502,15 @@ static void connect_cb(uv_stream_t* listener, int status)
 
 int main(int argc, char *argv[])
 {
+	char **newargv = uv_setup_args(argc, argv);
 	char *server_listen = SERVER_LISTEN;
 	int server_port = SERVER_PORT;
 	uint8_t *password = (uint8_t *)PASSWORD;
+	uint8_t crypt_method = CRYPTO_METHOD;
 	char *pid_path = PID_FILE;
 
 	char opt;
-	while((opt = getopt(argc, argv, "l:p:k:f:")) != -1) { // not portable to windows
+	while((opt = getopt(argc, newargv, "l:p:k:f:m:")) != -1) { // not portable to windows
 		switch(opt) {
 			case 'l':
 			    server_listen = optarg;
@@ -495,8 +524,12 @@ int main(int argc, char *argv[])
 			case 'f':
 			    pid_path = optarg;
 			    break;
+			case 'm':
+			    if (!strcmp("RC4", optarg))
+			    	crypt_method = METHOD_RC4;
+			    break;
 			default:
-				fprintf(stderr, USAGE, argv[0]);
+				fprintf(stderr, USAGE, newargv[0]);
 				abort();
 		}
 	}
@@ -511,13 +544,21 @@ int main(int argc, char *argv[])
 	if (!process_title)
 		FATAL("malloc() failed!");
 	snprintf(process_title, PROCESS_TITLE_LENGTH, PROCESS_TITLE, server_port);
-	uv_setup_args(argc, argv);
 	uv_set_process_title(process_title);
 	free(process_title);
 
 	LOGI(WELCOME_MESSAGE);
-	make_tables(password, encrypt_table, decrypt_table);
-	LOGI("Encrypt and decrypt table generated");
+
+	if (crypt_method == METHOD_SHADOWCRYPT)
+		LOGI("Using shadowcrypt crypto");
+	else if (crypt_method == METHOD_RC4)
+		LOGI("Using RC4 crypto");
+	else
+		FATAL("Crypto unknown!");
+
+	make_encryptor(NULL, &crypto, crypt_method, password);
+
+	LOGI("Crypto ready");
 	
 	int n;
 	uv_loop_t *loop = uv_default_loop();

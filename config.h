@@ -1,6 +1,7 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 #include "utils.h"
+#include "encrypt.h"
 
 // This is the IP address server will be used to accept new connection
 #define SERVER_LISTEN "0.0.0.0"
@@ -10,6 +11,12 @@
 
 // This is the password used for encrypt/decrypt, should be the same as your client
 #define PASSWORD "foobar!"
+
+// This is the method used for encrypt/decrypt, should be the same as your client
+// Available methods:
+// METHOD_SHADOWCRYPT : Original Substitute Encryption Method Made By clowwindy
+// METHOD_RC4         : RC4 Encryption
+#define CRYPTO_METHOD METHOD_SHADOWCRYPT
 
 // This is the path shadowsocks will write it's pid to
 #define PID_FILE "/tmp/shadowsocks.pid"

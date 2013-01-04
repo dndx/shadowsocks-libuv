@@ -18,9 +18,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "config.h"
 #include <string.h>
+#include <openssl/evp.h>
+#include <assert.h>
 #include "md5.h"
 #include "encrypt.h"
+#include "utils.h"
 
 #ifdef HIGHFIRST
 	uint64_t swap_uint64( uint64_t val )
@@ -93,7 +97,7 @@ static void merge_sort(uint8_t *arr, int start, int end, int ei, uint64_t keynum
 	merge(arr, start, end, mid, ei, keynum);
 }
 
-static void mergesort(uint8_t *arr, int length, int ei, uint64_t keynum)
+static void mergesrt(uint8_t *arr, int length, int ei, uint64_t keynum)
 {
 	merge_sort(arr, 0, length - 1, ei, keynum);
 }
@@ -117,7 +121,7 @@ void make_tables(const uint8_t *key, uint8_t *encrypt_table, uint8_t *decrypt_ta
 		temp_table[ei] = ei;
 	}
 	for (ei=1; ei<1024; ei++) {
-		mergesort(temp_table, TABLE_SIZE, ei, keynum);
+		mergesrt(temp_table, TABLE_SIZE, ei, keynum);
 	}
 	memcpy(encrypt_table, temp_table, TABLE_SIZE);
 	for (ei=0; ei<TABLE_SIZE; ei++) {
@@ -125,16 +129,92 @@ void make_tables(const uint8_t *key, uint8_t *encrypt_table, uint8_t *decrypt_ta
 	}
 }
 
-void shadow_encrypt(uint8_t *data, uint8_t *encrypt_table, register unsigned int length)
+void shadow_encrypt(uint8_t *data, struct encryptor *enc, register unsigned int length)
 {
-	while (length--) {
-		data[length] = encrypt_table[data[length]];
+	if (enc->encrypt_table) {
+		while (length--) {
+			data[length] = enc->encrypt_table[data[length]];
+		}
+	} else if (enc->rc4_en) {
+		rc4_crypt(enc->rc4_en, data, data, length);
+	} else {
+		FATAL("Crypto unknown!");
+	}
+	
+}
+
+void shadow_decrypt(uint8_t *data, struct encryptor *enc, register unsigned int length)
+{
+	if (enc->encrypt_table) {
+		while (length--) {
+			data[length] = enc->decrypt_table[data[length]];
+		}
+	} else if (enc->rc4_de) {
+		rc4_crypt(enc->rc4_de, data, data, length);
+	} else {
+		FATAL("Crypto unknown!");
 	}
 }
 
-void shadow_decrypt(uint8_t *data, uint8_t *decrypt_table, register unsigned int length)
+static int init_rc4_key(struct encryptor *enc)
 {
-	while (length--) {
-		data[length] = decrypt_table[data[length]];
+	unsigned char *key = calloc(1, EVP_MAX_IV_LENGTH);
+	if (!key)
+		FATAL("RC4 Cliper Init Failed");
+    unsigned char iv[EVP_MAX_IV_LENGTH];
+    int key_len = EVP_BytesToKey(EVP_rc4(), EVP_md5(), NULL, (uint8_t*) enc->key, strlen((char *)enc->key), 1, key, iv);
+    if (!key_len)
+    	FATAL("RC4 Cliper Init Failed");
+
+    enc->key = key;
+
+    return key_len;
+}
+
+// key should end with \0
+void make_encryptor(struct encryptor *tpl, struct encryptor *enc, uint8_t method, uint8_t *key)
+{
+	memset(enc, 0, sizeof(struct encryptor));
+
+	if (!tpl) {
+		if (method == METHOD_SHADOWCRYPT) {
+			assert(key);
+			enc->key = key;
+			enc->encrypt_table = (uint8_t *)calloc(TABLE_SIZE, sizeof(uint8_t));
+			enc->decrypt_table = (uint8_t *)calloc(TABLE_SIZE, sizeof(uint8_t));
+			if (!(enc->encrypt_table && enc->decrypt_table))
+				FATAL("malloc() failed!");
+			make_tables(key, enc->encrypt_table, enc->decrypt_table);
+		} else if (method == METHOD_RC4) {
+			assert(key);
+			enc->key = key;
+			init_rc4_key(enc);
+		}
+	} else {
+		assert(!method);
+		if (tpl->encrypt_table) {
+			assert(!key);
+			enc->encrypt_table = tpl->encrypt_table;
+			enc->decrypt_table = tpl->decrypt_table;
+		} else {
+			assert(!key);
+			assert(tpl->key);
+			enc->key = tpl->key;
+			enc->rc4_en = (struct rc4_state *)malloc(sizeof(struct rc4_state));
+			enc->rc4_de = (struct rc4_state *)malloc(sizeof(struct rc4_state));
+			if (!(enc->rc4_en && enc->rc4_de))
+				FATAL("malloc() failed!");
+			rc4_init(enc->rc4_en, enc->key, MD5_LEN);
+			rc4_init(enc->rc4_de, enc->key, MD5_LEN);
+		}
 	}
+}
+
+void destroy_encryptor(struct encryptor *enc)
+{
+	if (enc->rc4_en) {
+		free(enc->rc4_en);
+		free(enc->rc4_de);
+	}
+
 }
