@@ -33,10 +33,20 @@ char *sockaddr_to_str(struct sockaddr *addr)
 
 void signal_cb(uv_signal_t* handle, int signum)
 {
+	extern struct encryptor crypto;
+
 	if (uv_signal_stop(handle))
 		SHOW_UV_ERROR_AND_EXIT(handle->loop);
 	free(handle);
 	LOGI("Ctrl+C Pressed");
+
+	if (crypto.encrypt_table) {
+		free(crypto.encrypt_table);
+		free(crypto.decrypt_table);
+	} else {
+		free(crypto.key);
+	}
+
 	uv_loop_delete(uv_default_loop()); // Make Valgrind Happy
 
 	exit(0);
@@ -44,6 +54,8 @@ void signal_cb(uv_signal_t* handle, int signum)
 
 void setup_signal_handler(uv_loop_t *loop)
 {
+	signal(SIGPIPE, SIG_IGN);
+	
 	uv_signal_t *hup = (uv_signal_t *)malloc(sizeof(uv_signal_t));
 	if (!hup)
 		FATAL("malloc() failed!");

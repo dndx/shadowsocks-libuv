@@ -75,6 +75,7 @@ I did not fully benchmark it yet, but according to my use on [TinyVZ](http://tin
 
 ##Contributors
 * [@messense](https://github.com/messense) Logger Color
+* [@clowwindy](https://github.com/clowwindy) Test Case and Protol Maker of shadowsocks
 
 I appreciate all the people who have made this project better. Contribution is always welcome! 
 
