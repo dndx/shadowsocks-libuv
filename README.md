@@ -15,11 +15,13 @@ This is an [Open Source](http://opensource.org/licenses/MIT) project and release
 ## Features
 * Super fast and low resource consume (thanks to [libuv](https://github.com/joyent/libuv)), it can run very smoothly on almost any VPS. 
 * Fully compatible to other port of shadowsocks. 
+* Support the latest RC4 encryption method. 
 
 ## Attention
 This is an initial release and may not considered very stable, please open an issue if you encounter any bugs. Be sure to attach the error message so I can identify it. 
 
 ## How to Build
+	$ yum install openssl-devel
 	$ git clone --recursive https://github.com/dndx/shadowsocks-libuv.git
 	$ cd shadowsocks-libuv/
 	$ vim config.h
@@ -41,13 +43,14 @@ Also there are command line options that can be used to override settings in con
 	$ ./server -?
 	./server: invalid option -- ?
 	Shadowsocks Version:0.1 libuv(0.9) Written by Dndx(idndx.com)
-	Usage: ./server [-l listen] [-p port] [-k keyfile] [-f pidfile]
+	Usage: ./server [-l listen] [-p port] [-k keyfile] [-f pidfile] [-m rc4|shadow]
 
 	Options:
       -l : Override the listening IP
 	  -p : Override the listening port
 	  -k : Override the listening password
 	  -f : Override the pidfile path
+	  -m : Override the encryption method
 If you want to run server in background, you can:
 
 	$ nohup /path/to/server &
@@ -70,18 +73,29 @@ I suggest the first way. If your program does not run as expected, log file will
 5. Change it to `CSTDFLAG=--std=gnu99 -pedantic -Wall -Wextra -Wno-unused-parameter`
 6. Save the file and run `make` again
 
+### Can not using static link
+Thanks to [@cyfdecy](https://github.com/cyfdecyf)
+
+Do not use `-static` to compile this project. The problem is that `libuv` is using `pthread` and `getaddrinfo(3)` for async DNS resolve. But this will cause `getaddrinfo(3)` Segment Fault. 
+
+More information can be found at [issue #3](https://github.com/dndx/shadowsocks-libuv/issues/3)
+
+
 ## Performance
 I did not fully benchmark it yet, but according to my use on [TinyVZ](http://tinyvz.com/) (OpenVZ 128M RAM and CentOS 5.8 x86). When streaming YouTube 1080p vedio at about 20Mbit/s bandwidth, it use at most 3% of RAM (RSS about 7500) and almost no CPU time. During webpage browse it use less than 0.7% RAM (RSS about 1164). Which can be considered effective. 
 
 ##Contributors
 * [@messense](https://github.com/messense) Logger Color
-* [@clowwindy](https://github.com/clowwindy) Test Case and Protol Maker of shadowsocks
+* [@clowwindy](https://github.com/clowwindy)
+	* Test Case and Protol Maker of shadowsocks
+	* [getopt(3) issue](https://github.com/dndx/shadowsocks-libuv/pull/4)
+* [@cyfdecyf](https://github.com/cyfdecyf) Warning about static link in [issue #3](https://github.com/dndx/shadowsocks-libuv/issues/3)
 
 I appreciate all the people who have made this project better. Contribution is always welcome! 
 
 ## TODO List
 * IPv6 Support !important
-* RC4 Crypto Support
+* ~~RC4 Crypto Support~~ (accomplished)
 * Add Multi Port Support
 * Client Implement
 * …to be continued…
