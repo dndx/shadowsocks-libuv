@@ -2,4 +2,4 @@ language: c
 compiler:
   - gcc
   - clang
-script: make && make test
+script: sudo apt-get install libssl-dev && make && make test
