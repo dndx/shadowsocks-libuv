@@ -117,6 +117,7 @@ static void remote_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_bu
 	if (n) {
 		LOGE("Write to client failed!");
 		free(req);
+		free(buf.base);
 		HANDLE_CLOSE((uv_handle_t*)stream, remote_established_close_cb);
 		return;
 	}
@@ -188,6 +189,7 @@ static void client_established_read_cb(uv_stream_t* stream, ssize_t nread, uv_bu
 	if (n) {
 		LOGE("Write to remote failed!");
 		free(req);
+		free(buf.base);
 		HANDLE_CLOSE((uv_handle_t*)stream, client_established_close_cb);
 		return;
 	}
