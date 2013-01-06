@@ -4,7 +4,7 @@
 #include "encrypt.h"
 
 // This is the IP address server will be used to accept new connection
-#define SERVER_LISTEN "0.0.0.0"
+#define SERVER_LISTEN "::0"
 
 // This is the port server will be used to accept new connection
 #define SERVER_PORT 8888
