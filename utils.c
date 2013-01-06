@@ -4,10 +4,10 @@
 #include <uv.h>
 
 // Convert IPv4 or IPv6 sockaddr to string, DO NOT forget to free the buffer after use!
-char *sockaddr_to_str(struct sockaddr *addr)
+char *sockaddr_to_str(struct sockaddr_storage *addr)
 {
 	char *result;
-	if (addr->sa_family == AF_INET) { // IPv4
+	if (addr->ss_family == AF_INET) { // IPv4
 		result = (char *)malloc(INET_ADDRSTRLEN);
 		if (!result)
 			FATAL("malloc() failed!");
@@ -16,7 +16,7 @@ char *sockaddr_to_str(struct sockaddr *addr)
 			free(result);
 			result = NULL;
 		}
-	} else if (addr->sa_family == AF_INET6) { // IPv4
+	} else if (addr->ss_family == AF_INET6) { // IPv4
 		result = (char *)malloc(INET6_ADDRSTRLEN);
 		if (!result)
 			FATAL("malloc() failed!");

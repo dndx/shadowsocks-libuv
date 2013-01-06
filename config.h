@@ -4,7 +4,8 @@
 #include "encrypt.h"
 
 // This is the IP address server will be used to accept new connection
-#define SERVER_LISTEN "0.0.0.0"
+// By default, "::0" will listen on both IPv4 and IPv6 stack if your system have a kernel later than Linux 2.4.21 and 2.6
+#define SERVER_LISTEN "::0"
 
 // This is the port server will be used to accept new connection
 #define SERVER_PORT 8888

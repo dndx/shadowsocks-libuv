@@ -568,13 +568,13 @@ int main(int argc, char *argv[])
 	uv_loop_t *loop = uv_default_loop();
 	uv_tcp_t listener;
 
-	struct sockaddr_in addr = uv_ip4_addr(server_listen, server_port);
+	struct sockaddr_in6 addr = uv_ip6_addr(server_listen, server_port);
 
 	n = uv_tcp_init(loop, &listener);
 	if (n)
 		SHOW_UV_ERROR_AND_EXIT(loop);
 
-	n = uv_tcp_bind(&listener, addr);
+	n = uv_tcp_bind6(&listener, addr);
 	if (n)
 		SHOW_UV_ERROR_AND_EXIT(loop);
 
