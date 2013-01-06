@@ -43,10 +43,10 @@
                           fprintf(stderr, "\e[01;35m %s ERROR: \e[0m" format " on File: %s Line: %s\n", timestr, ##__VA_ARGS__, __FILE__, TOSTR(__LINE__));}\
                           while(0)
 #define LOGCONN(stream, message) do {\
-                            struct sockaddr remote_addr;\
+                            struct sockaddr_storage remote_addr;\
                             memset(&remote_addr, 0, sizeof(remote_addr));\
                             int namelen = sizeof(remote_addr);\
-                            if (uv_tcp_getpeername((stream), &remote_addr, &namelen))\
+                            if (uv_tcp_getpeername((stream), (struct sockaddr *)&remote_addr, &namelen))\
                                 break;\
                             char *ip_str = sockaddr_to_str(&remote_addr);\
                             if (!ip_str)\
@@ -73,7 +73,7 @@
                                        	   uv_close((uv_handle_t *)handle, callback);\
                                        	} while (0)
 
-char *sockaddr_to_str(struct sockaddr *addr);
+char *sockaddr_to_str(struct sockaddr_storage *addr);
 void setup_signal_handler(uv_loop_t *loop);
 
 #endif /* !UTILS_H_ */
