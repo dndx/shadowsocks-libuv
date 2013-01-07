@@ -42,12 +42,14 @@
 #define PROCESS_TITLE_LENGTH 26
 #define ADDRTYPE_IPV4 1
 #define ADDRTYPE_DOMAIN 3
+#define ADDRTYPE_IPV6 4
 
 typedef struct
 {
 	uv_tcp_t client;
 	uv_tcp_t remote;
-	uint32_t remote_ip;   // Network order
+	uint8_t remote_ip[16];   // Network order
+        uint8_t remote_ip_type;
 	uint16_t remote_port; // Network order
         struct encryptor encoder; // En/decoder
 	unsigned char *handshake_buffer;
