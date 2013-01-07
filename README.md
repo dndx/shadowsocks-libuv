@@ -8,7 +8,7 @@ protol made by [clowwindy](https://raw.github.com/clowwindy/), libuv port by [dn
 
 This is only a **server**, it should works with any shadowsocks client. 
 
-Current version: 0.1
+Current version: 0.2
 
 This is an [Open Source](http://opensource.org/licenses/MIT) project and released under [The MIT License](http://opensource.org/licenses/MIT)
 
@@ -16,9 +16,28 @@ This is an [Open Source](http://opensource.org/licenses/MIT) project and release
 * Super fast and low resource consume (thanks to [libuv](https://github.com/joyent/libuv)), it can run very smoothly on almost any VPS. 
 * Fully compatible to other port of shadowsocks. 
 * Support the latest RC4 encryption method. 
+* Fully IPv6 Ready
+
+## About IPv6 Support
+Instead of create two separate file descriptor for IPv4 and IPv6, shadowsocks-libuv only create one. The reason it works is that since Linux kernel 2.4.21 and 2.6, we can use `IN6ADDR_ANY` (aka. `::0`) to accept connection from both IPv4 and IPv6 stack. Those connections who comes from IPv4 stack will be mapped to [IPv4-mapped IPv6 addresses](https://en.wikipedia.org/wiki/IPv6#IPv4-mapped_IPv6_addresses) automaticly. For example, IPv4 address `192.168.1.2` will be mapped to `::ffff:192:168:1:2` and will work whether your actual machine have IPv6 link or not. 
+
+If you want your shadowsocks listen on specified IPv4 address, just make it listen on something like `::ffff:192:168:1:2`. 
+
+When connect to remote server, shadowsocks will prefer to use the IPv6 address if both your server and remote supports IPv6. This will work even your connection to the server is using IPv4. Thus you can use shadowsocks as an IPv4 to IPv6 or IPv6 to IPv4 tunnel. 
+
+### Diagram
+
+	+------+    IPv4    +------+    IPv4    +------+
+	|Client| <---OR---> |Server| <---OR---> |Remote|
+	+------+    IPv6    +------+    IPv6    +------+
+Client is any compatible shadowsocks client
+
+Server is shadowsocks-libuv or other compatible server
+
+Remote is the service you are trying to access
 
 ## Attention
-This is an initial release and may not considered very stable, please open an issue if you encounter any bugs. Be sure to attach the error message so I can identify it. 
+Please open an issue if you encounter any bugs. Be sure to attach the error message so I can identify it. 
 
 ## How to Build
 	$ yum install openssl-devel
@@ -91,12 +110,13 @@ I did not fully benchmark it yet, but according to my use on [TinyVZ](http://tin
 	* Test Case and Protol Maker of shadowsocks
 	* [getopt(3) issue](https://github.com/dndx/shadowsocks-libuv/pull/4)
 * [@cyfdecyf](https://github.com/cyfdecyf) Warning about static link in [issue #3](https://github.com/dndx/shadowsocks-libuv/issues/3)
+* [@madeye](https://github.com/madeye) [IPv6 Support](https://github.com/dndx/shadowsocks-libuv/pull/8)
 
 I appreciate all the people who have made this project better. Contribution is always welcome! 
 
 ## TODO List
-* IPv6 Support !important
+* ~~Fully IPv6 Support~~ (accomplished)
 * ~~RC4 Crypto Support~~ (accomplished)
-* Add Multi Port Support
+* Multi Port Support
 * Client Implement
 * …to be continued…

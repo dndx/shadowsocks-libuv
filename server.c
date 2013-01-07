@@ -298,14 +298,15 @@ static int do_handshake(uv_stream_t *stream)
 	server_ctx *ctx = (server_ctx *)stream->data;
 	int n;
 
-	if (!ctx->remote_ip) {
+	if (!ctx->remote_ip_type) {
 		if (ctx->buffer_len < 2) // Not interpretable
 			return 1;
 		uint8_t addrtype = ctx->handshake_buffer[0];
 		if (addrtype == ADDRTYPE_IPV4) {
 			if (ctx->buffer_len < 5)
 				return 1;
-			ctx->remote_ip = *((uint32_t *)(ctx->handshake_buffer + 1));
+			memcpy(ctx->remote_ip, ctx->handshake_buffer + 1, 4);
+			ctx->remote_ip_type = ADDRTYPE_IPV4;
 			SHIFT_BYTE_ARRAY_TO_LEFT(ctx->handshake_buffer, 5, HANDSHAKE_BUFFER_SIZE);
 			ctx->buffer_len -= 5;
 			// TODO: Print out
@@ -321,11 +322,7 @@ static int do_handshake(uv_stream_t *stream)
 			char domain[domain_len+1];
 			domain[domain_len] = 0;
 			memcpy(domain, ctx->handshake_buffer+2, domain_len);
-			struct addrinfo hints;
-    		hints.ai_family = AF_INET; // IPv4 Only
-    		hints.ai_socktype = SOCK_STREAM;
-    		hints.ai_protocol = IPPROTO_TCP;
-    		hints.ai_flags = 0;
+
 			uv_getaddrinfo_t *resolver = (uv_getaddrinfo_t *)malloc(sizeof(uv_getaddrinfo_t));
 			if (!resolver) {
 				HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
@@ -333,7 +330,7 @@ static int do_handshake(uv_stream_t *stream)
 			}
 			resolver->data = ctx; // We need to locate back the stream
 			LOGI("Domain is: %s", domain);
-			n = uv_getaddrinfo(stream->loop, resolver, client_handshake_domain_resolved, domain, NULL, &hints);
+			n = uv_getaddrinfo(stream->loop, resolver, client_handshake_domain_resolved, domain, NULL, NULL);
 			if (n) {
 				SHOW_UV_ERROR(stream->loop);
 				HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
@@ -372,12 +369,27 @@ static int do_handshake(uv_stream_t *stream)
 			FATAL("malloc() failed!");
 		}
 		req->data = ctx;
-		struct sockaddr_in remote_addr;
-		memset(&remote_addr, 0, sizeof(remote_addr));
-		remote_addr.sin_family = AF_INET;
-		remote_addr.sin_addr.s_addr = ctx->remote_ip;
-		remote_addr.sin_port = ctx->remote_port;
-		n = uv_tcp_connect(req, &ctx->remote, remote_addr, connect_to_remote_cb);
+
+		if (ctx->remote_ip_type == ADDRTYPE_IPV4) {
+			struct sockaddr_in remote;
+			memset(&remote, 0, sizeof(remote));
+			remote.sin_family = AF_INET;
+			remote.sin_addr.s_addr = *((uint32_t *)ctx->remote_ip);
+			remote.sin_port = ctx->remote_port;
+
+			n = uv_tcp_connect(req, &ctx->remote, remote, connect_to_remote_cb);
+		} else if (ctx->remote_ip_type == ADDRTYPE_IPV6) {
+			struct sockaddr_in6 remote;
+			memset(&remote, 0, sizeof(remote));
+			remote.sin6_family = AF_INET6;
+			memcpy(&remote.sin6_addr.s6_addr, ctx->remote_ip, 16);
+			remote.sin6_port = ctx->remote_port;
+
+			n = uv_tcp_connect6(req, &ctx->remote, remote, connect_to_remote_cb);
+		} else {
+			FATAL("addrtype unknown!");
+		}
+
 		if (n) {
 			SHOW_UV_ERROR(stream->loop);
 			HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
@@ -405,7 +417,15 @@ static void client_handshake_domain_resolved(uv_getaddrinfo_t *resolver, int sta
 		return;
 	}
 
-	ctx->remote_ip = ((struct sockaddr_in*)(res->ai_addr))->sin_addr.s_addr;
+	if (res->ai_family == AF_INET) { // IPv4
+		memcpy(ctx->remote_ip, &((struct sockaddr_in*)(res->ai_addr))->sin_addr.s_addr, 4);
+		ctx->remote_ip_type = ADDRTYPE_IPV4;
+	} else if (res->ai_family == AF_INET6) {
+		memcpy(ctx->remote_ip, &((struct sockaddr_in6*)(res->ai_addr))->sin6_addr.s6_addr, 16);
+		ctx->remote_ip_type = ADDRTYPE_IPV6;
+	} else {
+		FATAL("dns resolve failed!");
+	}
 
 	if (do_handshake((uv_stream_t *)(void *)&ctx->client)) {
 		int n = uv_read_start((uv_stream_t *)(void *)&ctx->client, client_handshake_alloc_cb, client_handshake_read_cb);

@@ -5,6 +5,7 @@
 
 // This is the IP address server will be used to accept new connection
 // By default, "::0" will listen on both IPv4 and IPv6 stack if your system have a kernel later than Linux 2.4.21 and 2.6
+// This have to be an IPv6 address or IPv4-mapped IPv6 address. If you want it listen only on specified IPv4 address, use the format "::ffff:192:168:1:2"
 #define SERVER_LISTEN "::0"
 
 // This is the port server will be used to accept new connection
