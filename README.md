@@ -62,7 +62,7 @@ Also there are command line options that can be used to override settings in con
 
 	$ ./server -?
 	./server: invalid option -- ?
-	Shadowsocks Version:0.1 libuv(0.9) Written by Dndx(idndx.com)
+	Shadowsocks Version:0.2 libuv(0.9) Written by Dndx(idndx.com)
 	Usage: ./server [-l listen] [-p port] [-k keyfile] [-f pidfile] [-m rc4|shadow]
 
 	Options:
