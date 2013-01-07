@@ -374,7 +374,7 @@ static int do_handshake(uv_stream_t *stream)
 			struct sockaddr_in remote;
 			memset(&remote, 0, sizeof(remote));
 			remote.sin_family = AF_INET;
-			remote.sin_addr.s_addr = *((uint32_t *)ctx->remote_ip);
+			memcpy(&remote.sin_addr.s_addr, ctx->remote_ip, 4);
 			remote.sin_port = ctx->remote_port;
 
 			n = uv_tcp_connect(req, &ctx->remote, remote, connect_to_remote_cb);
