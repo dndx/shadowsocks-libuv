@@ -24,7 +24,7 @@
 #include <stdint.h>
 
 #define SHADOW_MAJOR_VERSION 0
-#define SHADOW_MINOR_VERSION 1
+#define SHADOW_MINOR_VERSION 2
 #define WELCOME_MESSAGE "Shadowsocks Version:" TOSTR(SHADOW_MAJOR_VERSION) "." TOSTR(SHADOW_MINOR_VERSION) \
                         " libuv(" TOSTR(UV_VERSION_MAJOR) "." TOSTR(UV_VERSION_MINOR) ")"\
                         " Written by Dndx(idndx.com)"
