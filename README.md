@@ -50,7 +50,7 @@ Note that you need to rebuild it every time you modify config.h, just run `make`
 
 Tested and confirmed to work on:
 
-* Max OS X 10.8.2 x64 using clang 4.1
+* ~~Max OS X 10.8.2 x64 using clang 4.1~~ (Temporary broken, see libuv issue [#679](https://github.com/joyent/libuv/issues/679))
 * CentOS 5.8 x86 using GCC 4.1.2
 * CentOS 6.3 x64 using GCC 4.4.6
 * Ubuntu Linux 12.04 using GCC 4.6.x and Clang 3.1.x (Travis Environment)
