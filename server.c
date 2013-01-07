@@ -382,7 +382,7 @@ static int do_handshake(uv_stream_t *stream)
 			struct sockaddr_in6 remote;
 			memset(&remote, 0, sizeof(remote));
 			remote.sin6_family = AF_INET6;
-			memcpy(&remote->sin6_addr.s6_addr, ctx->remote_ip, 16);
+			memcpy(&remote.sin6_addr.s6_addr, ctx->remote_ip, 16);
 			remote.sin6_port = ctx->remote_port;
 
 			n = uv_tcp_connect6(req, &ctx->remote, remote, connect_to_remote_cb);
