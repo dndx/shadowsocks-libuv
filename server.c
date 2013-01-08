@@ -266,7 +266,7 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 		if (n) {
 			LOGE("Write to remote failed!");
 			free(wreq);
-			HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, client_established_close_cb);
+			HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->remote, remote_established_close_cb);
 			return;
 		}
 	}
