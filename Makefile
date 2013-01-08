@@ -4,7 +4,7 @@ RTFLAGS=-lrt
 ifeq ($(UNAME), Darwin)
 RTFLAGS=-framework CoreServices
 endif
-OLEVEL=-O3 -DNDEBUG
+OLEVEL=-O2 -DNDEBUG
 CFLAGS=-Wall $(OLEVEL) -I libuv/include -std=gnu99
 FILES=server.c utils.c encrypt.c md5.c rc4.c
 APP=server
