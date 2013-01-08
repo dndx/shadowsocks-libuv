@@ -154,7 +154,10 @@ static void after_write_cb(uv_write_t* req, int status)
 			}
 		}
 		ctx->buffer_len--;
+	} else if (uv_is_closing((uv_handle_t *)(void *)&ctx->remote)) {
+		HANDLE_CLOSE((uv_handle_t *)&ctx->remote, remote_established_close_cb);
 	}
+
 
 	free(req->data); // Free buffer
 	free(req);
