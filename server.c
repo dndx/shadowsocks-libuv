@@ -248,10 +248,6 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 	buf.base = (char *)ctx->handshake_buffer;
 	buf.len = HANDSHAKE_BUFFER_SIZE;
 
-	// shadow_encrypt((uint8_t *)buf.base, &ctx->encoder, ctx->buffer_len);
-
-	// client_established_read_cb((uv_stream_t *)(void *)&ctx->client, ctx->buffer_len, buf); // Deal with ramaining data, only once
-
 	if (!ctx->buffer_len) {
 		free(ctx->handshake_buffer);
 	} else {
@@ -314,8 +310,8 @@ static int do_handshake(uv_stream_t *stream)
 			uint8_t domain_len = ctx->handshake_buffer[1];
 			if (!domain_len) { // Domain length is zero
 				LOGE("Domain length is zero");
-				HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
-				return 0;
+				uv_close((uv_handle_t*)stream, handshake_client_close_cb);
+				return -1;
 			}
 			if (ctx->buffer_len < domain_len + 2)
 				return 1;
@@ -325,7 +321,7 @@ static int do_handshake(uv_stream_t *stream)
 
 			uv_getaddrinfo_t *resolver = (uv_getaddrinfo_t *)malloc(sizeof(uv_getaddrinfo_t));
 			if (!resolver) {
-				HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
+				uv_close((uv_handle_t*)stream, handshake_client_close_cb);
 				FATAL("malloc() failed!");
 			}
 			resolver->data = ctx; // We need to locate back the stream
@@ -333,9 +329,9 @@ static int do_handshake(uv_stream_t *stream)
 			n = uv_getaddrinfo(stream->loop, resolver, client_handshake_domain_resolved, domain, NULL, NULL);
 			if (n) {
 				SHOW_UV_ERROR(stream->loop);
-				HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
+				uv_close((uv_handle_t*)stream, handshake_client_close_cb);
 				free(resolver);
-				return 0;
+				return -1;
 			}
 			SHIFT_BYTE_ARRAY_TO_LEFT(ctx->handshake_buffer, 2+domain_len, HANDSHAKE_BUFFER_SIZE);
 			ctx->buffer_len -= 2 + domain_len;
@@ -343,8 +339,8 @@ static int do_handshake(uv_stream_t *stream)
 			return 1;
 		} else { // Unsupported addrtype
 			LOGI("addrtype unknown, closing");
-			HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
-			return 0;
+			uv_close((uv_handle_t*)stream, handshake_client_close_cb);
+			return -1;
 		}
 	} // !ctx->remote_ip
 
@@ -354,8 +350,8 @@ static int do_handshake(uv_stream_t *stream)
 		ctx->remote_port = *((uint16_t *)ctx->handshake_buffer);
 		if (!ctx->remote_port) {
 			LOGE("Remote port is zero");
-			HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
-			return 0;
+			uv_close((uv_handle_t*)stream, handshake_client_close_cb);
+			return -1;
 		}
 		SHIFT_BYTE_ARRAY_TO_LEFT(ctx->handshake_buffer, 2, HANDSHAKE_BUFFER_SIZE);
 		ctx->buffer_len -= 2;
@@ -365,7 +361,7 @@ static int do_handshake(uv_stream_t *stream)
 			SHOW_UV_ERROR_AND_EXIT(stream->loop);
 		uv_connect_t *req = (uv_connect_t *)malloc(sizeof(uv_connect_t));
 		if (!req) {
-			HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
+			uv_close((uv_handle_t*)stream, handshake_client_close_cb);
 			FATAL("malloc() failed!");
 		}
 		req->data = ctx;
@@ -392,9 +388,9 @@ static int do_handshake(uv_stream_t *stream)
 
 		if (n) {
 			SHOW_UV_ERROR(stream->loop);
-			HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb);
+			uv_close((uv_handle_t*)stream, handshake_client_close_cb);
 			free(req);
-			return 0;
+			return -1;
 		}
 	}
 
@@ -411,7 +407,7 @@ static void client_handshake_domain_resolved(uv_getaddrinfo_t *resolver, int sta
 		} else {
 			SHOW_UV_ERROR(ctx->client.loop);
 		}
-		HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, handshake_client_close_cb);
+		uv_close((uv_handle_t*)(void *)&ctx->client, handshake_client_close_cb);
 		uv_freeaddrinfo(res);
 		free(resolver);
 		return;
@@ -427,10 +423,10 @@ static void client_handshake_domain_resolved(uv_getaddrinfo_t *resolver, int sta
 		FATAL("dns resolve failed!");
 	}
 
-	if (do_handshake((uv_stream_t *)(void *)&ctx->client)) {
+	if (!do_handshake((uv_stream_t *)(void *)&ctx->client)) {
 		int n = uv_read_start((uv_stream_t *)(void *)&ctx->client, client_handshake_alloc_cb, client_handshake_read_cb);
 		if (n) {
-			HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, handshake_client_close_cb);
+			uv_close((uv_handle_t*)(void *)&ctx->client, handshake_client_close_cb);
 			SHOW_UV_ERROR(ctx->client.loop);
 		}
 	}
@@ -446,7 +442,7 @@ static void client_handshake_read_cb(uv_stream_t* stream, ssize_t nread, uv_buf_
 	if (nread < 0) {
 		if (buf.len) // If buf is set, we need to free it
 			free(buf.base);
-		HANDLE_CLOSE((uv_handle_t*)stream, handshake_client_close_cb); // Then close the connection
+		uv_close((uv_handle_t*)stream, handshake_client_close_cb); // Then close the connection
 		return;
 	} else if (!nread) {
 		free(buf.base);
