@@ -148,6 +148,7 @@ static void after_write_cb(uv_write_t* req, int status)
 			int n = uv_read_start((uv_stream_t *)(void *)&ctx->remote, established_alloc_cb, remote_established_read_cb);
 			if (n) {
 				SHOW_UV_ERROR(ctx->client.loop);
+				HANDLE_CLOSE((uv_handle_t *)req->remote, remote_established_close_cb);
 				free(req->data); // Free buffer
 				free(req);
 				return;
@@ -278,7 +279,7 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 	int n = uv_read_start((uv_stream_t *)(void *)&ctx->client, established_alloc_cb, client_established_read_cb);
 	if (n) {
 		SHOW_UV_ERROR(ctx->client.loop);
-		HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->remote, remote_established_close_cb);
+		HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, client_established_close_cb);
 		return;
 	}
 	n = uv_read_start((uv_stream_t *)(void *)&ctx->remote, established_alloc_cb, remote_established_read_cb);
