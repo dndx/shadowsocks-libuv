@@ -424,7 +424,7 @@ static void client_handshake_domain_resolved(uv_getaddrinfo_t *resolver, int sta
 		FATAL("dns resolve failed!");
 	}
 
-	if (!do_handshake((uv_stream_t *)(void *)&ctx->client)) {
+	if (do_handshake((uv_stream_t *)(void *)&ctx->client)) {
 		int n = uv_read_start((uv_stream_t *)(void *)&ctx->client, client_handshake_alloc_cb, client_handshake_read_cb);
 		if (n) {
 			uv_close((uv_handle_t*)(void *)&ctx->client, handshake_client_close_cb);
