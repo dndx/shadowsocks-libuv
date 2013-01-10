@@ -6,24 +6,24 @@ Shadowsocks is a lightweight tunnel proxy to help you get through firewalls.
 
 Protocol made by [clowwindy](https://raw.github.com/clowwindy/), libuv port by [dndx](https://github.com/dndx)
 
-This is only a **server**, it should works with any shadowsocks client. 
+This is only a **server**, it should work with any shadowsocks client. 
 
 Current version: 0.2
 
 This is an [Open Source](http://opensource.org/licenses/MIT) project and released under [The MIT License](http://opensource.org/licenses/MIT)
 
 ## Features
-* Super fast and low resource consumption (thanks to [libuv](https://github.com/joyent/libuv)), it can run very smoothly on almost any VPS. 
-* Fully compatible to other port of shadowsocks. 
-* Support the latest RC4 encryption method. 
+* Super fast and low resource consumption (thanks to [libuv](https://github.com/joyent/libuv)), it runs smoothly on almost any VPS. 
+* Fully compatible with other ports of shadowsocks. 
+* Supports the latest RC4 encryption method. 
 * Fully IPv6 Ready
 
 ## About IPv6 Support
 Instead of creating two separate file descriptors for IPv4 and IPv6, shadowsocks-libuv only creates one. It works because it uses the Linux kernel 2.4.21 and 2.6, and we can use `IN6ADDR_ANY` (aka. `::0`) to accept connections from both the IPv4 and IPv6 stacks. Those connections come from the IPv4 stack will be mapped to [IPv4-mapped IPv6 addresses](https://en.wikipedia.org/wiki/IPv6#IPv4-mapped_IPv6_addresses) automatically. For example, IPv4 address `192.168.1.2` will be mapped to `::ffff:192:168:1:2` and will work whether your machine has an IPv6 link or not. 
 
-If you want your shadowsocks to listen on a specific IPv4 address, just make it listen using `::ffff:192:168:1:2`. 
+If you want your shadowsocks to listen on a specific IPv4 address, listen using `::ffff:192:168:1:2`. 
 
-When connecting to a remote server, shadowsocks prefers to use the IPv6 address if both your server and remote supports IPv6. This will work even if your connection to the server is using IPv4. Thus you can use shadowsocks as an IPv4 to IPv6 or IPv6 to IPv4 tunnel. 
+When connecting to a remote server, shadowsocks prefers to use an IPv6 address if both your server and remote supports IPv6. This will work even if your connection to the server is using IPv4. Thus you can use shadowsocks as an IPv4 to IPv6 or IPv6 to IPv4 tunnel. 
 
 ### Diagram
 
