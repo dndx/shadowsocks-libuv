@@ -234,7 +234,7 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 	if (status) {
 		if (uv_last_error(req->handle->loop).code != UV_ECANCELED) {
 			SHOW_UV_ERROR(ctx->client.loop);
-			HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->remote, remote_established_close_cb);
+			uv_close((uv_handle_t*)(void *)&ctx->remote, remote_established_close_cb);
 			free(ctx->handshake_buffer);
 			free(req);
 		}
@@ -254,7 +254,7 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 	} else {
 		uv_write_t *wreq = (uv_write_t *)malloc(sizeof(uv_write_t));
 		if (!wreq) {
-			HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, client_established_close_cb);
+			uv_close((uv_handle_t*)(void *)&ctx->client, client_established_close_cb);
 			FATAL("malloc() failed!");
 		}
 		wreq->data = buf.base;
@@ -263,29 +263,24 @@ static void connect_to_remote_cb(uv_connect_t* req, int status)
 		if (n) {
 			LOGE("Write to remote failed!");
 			free(wreq);
-			HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->remote, remote_established_close_cb);
+			uv_close((uv_handle_t*)(void *)&ctx->remote, remote_established_close_cb);
 			return;
 		}
 	}
 
 	ctx->handshake_buffer = NULL;
 	ctx->buffer_len = 0;
-
-	if (uv_is_closing((uv_handle_t *)(void *)&ctx->remote) || uv_is_closing((uv_handle_t *)(void *)&ctx->client)) {
-		LOGE("Connection failed, remote or client already closed");
-		return;
-	}
 	
 	int n = uv_read_start((uv_stream_t *)(void *)&ctx->client, established_alloc_cb, client_established_read_cb);
 	if (n) {
 		SHOW_UV_ERROR(ctx->client.loop);
-		HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->client, client_established_close_cb);
+		uv_close((uv_handle_t*)(void *)&ctx->client, client_established_close_cb);
 		return;
 	}
 	n = uv_read_start((uv_stream_t *)(void *)&ctx->remote, established_alloc_cb, remote_established_read_cb);
 	if (n) {
 		SHOW_UV_ERROR(ctx->client.loop);
-		HANDLE_CLOSE((uv_handle_t*)(void *)&ctx->remote, remote_established_close_cb);
+		uv_close((uv_handle_t*)(void *)&ctx->remote, remote_established_close_cb);
 		return;
 	}
 }
@@ -424,7 +419,7 @@ static void client_handshake_domain_resolved(uv_getaddrinfo_t *resolver, int sta
 		FATAL("dns resolve failed!");
 	}
 
-	if (do_handshake((uv_stream_t *)(void *)&ctx->client)) {
+	if (do_handshake((uv_stream_t *)(void *)&ctx->client) == 1) {
 		int n = uv_read_start((uv_stream_t *)(void *)&ctx->client, client_handshake_alloc_cb, client_handshake_read_cb);
 		if (n) {
 			uv_close((uv_handle_t*)(void *)&ctx->client, handshake_client_close_cb);
