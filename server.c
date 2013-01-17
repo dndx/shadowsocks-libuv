@@ -599,5 +599,5 @@ int main(int argc, char *argv[])
 	setup_signal_handler(loop);
 	#endif /* !NDEBUG */
 
-	return uv_run(loop);
+	return uv_run(loop, UV_RUN_DEFAULT);
 }
