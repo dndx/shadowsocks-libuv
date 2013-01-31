@@ -143,8 +143,9 @@ void MD5Final(digest, ctx)
     byteReverse(ctx->in, 14);
 
     /* Append length in bits and transform */
-    ((uint32 *) ctx->in)[14] = ctx->bits[0];
-    ((uint32 *) ctx->in)[15] = ctx->bits[1];
+    // ((uint32 *) ctx->in)[14] = ctx->bits[0];
+    // ((uint32 *) ctx->in)[15] = ctx->bits[1];
+    memcpy(ctx->in + 56, ctx->bits, 8);
 
     MD5Transform(ctx->buf, (uint32 *) ctx->in);
     byteReverse((unsigned char *) ctx->buf, 4);
